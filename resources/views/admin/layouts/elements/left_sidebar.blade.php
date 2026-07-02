@@ -64,47 +64,6 @@
 			</a>
 		</li>
 
-		<li class="menu-item {{ request()->is('admin/users') ? 'active' : ''}}">
-			<a href="{{route('admin.users.index')}}" class="menu-link">
-				<i class="menu-icon tf-icons bx bx-group"></i>
-				<div data-i18n="User">Users</div>
-			</a>
-		</li>
 
-		<li class="menu-item {{ request()->is('admin/contacts') ? 'active' : ''}}">
-			<a href="{{route('admin.contacts.index')}}" class="menu-link">
-				<i class="menu-icon tf-icons bx bx-envelope"></i>
-				<div data-i18n="Contacts">Contacts</div>
-			</a>
-		</li>
-
-		<li class="menu-item {{ request()->is('admin/notifications/index') ? 'active' : ''}}">
-			<a href="{{route('admin.notifications.index')}}" class="menu-link">
-				<i class="menu-icon tf-icons bx bx-bell"></i>
-				<div data-i18n="Notifications">Notifications</div>
-			</a>
-		</li>
-		
-		@php
-            $pages = Helper::pages();
-        @endphp
-		
-		<li class="menu-item {{ request()->is('admin/page*') ? 'active open' : ''}}">
-			<a href="javascript:void(0);" class="menu-link menu-toggle">
-				<i class="menu-icon tf-icons bx bx-book-content"></i>
-				<div data-i18n="Pages">Pages</div>
-				<div class="badge bg-danger rounded-pill ms-auto">{{count($pages)}}</div>
-			</a>
-			<ul class="menu-sub">
-				@foreach($pages as $page)
-					<li class="menu-item {{ request()->is('admin/page/create/'.$page->key) ? 'active' : ''}}">
-						<a href="{{route('admin.page.create',$page->key)}}" class="menu-link">
-							<div data-i18n="{{$page->name}}">{{$page->name}}</div>
-						</a>
-					</li>
-                @endforeach
-			</ul>
-		</li>
-		
 	</ul>
 </aside>
