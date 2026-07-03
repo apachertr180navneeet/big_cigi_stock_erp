@@ -84,5 +84,29 @@
                 <div data-i18n="Item Masters">Item Masters</div>
             </a>
         </li>
+
+        <!-- Billing -->
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Billing</span></li>
+        <li class="menu-item {{ request()->is('admin/purchases*') ? 'active' : ''}}">
+            <a href="{{route('admin.purchases.index')}}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-cart-alt"></i>
+                <div data-i18n="Purchases">Purchases</div>
+            </a>
+        </li>
+        <li class="menu-item {{ request()->is('admin/sales*') ? 'active' : ''}}">
+            <a href="{{route('admin.sales.index')}}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-receipt"></i>
+                <div data-i18n="Sales">Sales</div>
+            </a>
+        </li>
+
+        <!-- Reports -->
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Reports</span></li>
+        <li class="menu-item {{ request()->is('admin/reports*') ? 'active' : ''}}">
+            <a href="{{route('admin.reports.stock')}}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-bar-chart-alt-2"></i>
+                <div data-i18n="Stock Report">Stock Report</div>
+            </a>
+        </li>
 	</ul>
 </aside>

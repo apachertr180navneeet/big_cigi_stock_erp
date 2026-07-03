@@ -23,6 +23,7 @@ class ItemMaster extends Model
         'sales_rate',
         'cgst_percentage',
         'sgst_percentage',
+        'current_stock',
         'status',
     ];
 }
