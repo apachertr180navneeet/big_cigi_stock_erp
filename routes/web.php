@@ -55,12 +55,18 @@ Route::name('admin.')->prefix('admin')->group(function () {
         Route::post('profile', [AdminAuthController::class, 'updateAdminProfile'])->name('update.profile');
 
         Route::post('customers/change-status', [CustomerController::class, 'changeStatus'])->name('customers.change-status');
+        Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
+        Route::get('customers/template', [CustomerController::class, 'downloadTemplate'])->name('customers.template');
         Route::resource('customers', CustomerController::class);
 
         Route::post('vendors/change-status', [VendorController::class, 'changeStatus'])->name('vendors.change-status');
+        Route::post('vendors/import', [VendorController::class, 'import'])->name('vendors.import');
+        Route::get('vendors/template', [VendorController::class, 'downloadTemplate'])->name('vendors.template');
         Route::resource('vendors', VendorController::class);
 
         Route::post('item-masters/change-status', [ItemMasterController::class, 'changeStatus'])->name('item_masters.change-status');
+        Route::post('item-masters/import', [ItemMasterController::class, 'import'])->name('item_masters.import');
+        Route::get('item-masters/template', [ItemMasterController::class, 'downloadTemplate'])->name('item_masters.template');
         Route::resource('item_masters', ItemMasterController::class);
 
         Route::resource('purchases', PurchaseController::class);

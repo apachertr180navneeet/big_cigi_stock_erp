@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 
+use App\Exports\VendorTemplateExport;
+use App\Imports\VendorImport;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class VendorController extends Controller
 {
@@ -66,6 +69,25 @@ class VendorController extends Controller
             return response()->json(['success' => true, 'message' => 'Status updated successfully.', 'status' => $vendor->status]);
         }
         return response()->json(['success' => false, 'message' => 'Vendor not found.'], 404);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            Excel::import(new VendorImport, $request->file('file'));
+            return redirect()->route('admin.vendors.index')->with('success', 'Vendors imported successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.vendors.index')->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new VendorTemplateExport, 'vendor_template.xlsx');
     }
 }
 

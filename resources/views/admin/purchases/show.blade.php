@@ -91,6 +91,8 @@
                     </thead>
                     <tbody>
                         @php
+                            $totalPackages = 0;
+                            $totalQty = 0;
                             $totalBasic = 0;
                             $totalDiscount = 0;
                             $totalNet = 0;
@@ -105,6 +107,8 @@
                                 $basicAmt = $pItem->quantity * $pItem->rate;
                                 $netAmt = $basicAmt - $pItem->discount_amount;
                                 $tv = $pItem->packets * $pItem->mrp;
+                                $totalPackages += $pItem->no_of_package;
+                                $totalQty += $pItem->quantity;
                                 $totalBasic += $basicAmt;
                                 $totalDiscount += $pItem->discount_amount;
                                 $totalNet += $netAmt;
@@ -139,9 +143,9 @@
                     <tfoot>
                         <tr class="table-light">
                             <td colspan="3" class="text-end">Total:</td>
+                            <td class="text-end">{{ number_format($totalPackages, 2) }}</td>
                             <td></td>
-                            <td></td>
-                            <td></td>
+                            <td class="text-end">{{ number_format($totalQty, 2) }}</td>
                             <td></td>
                             <td class="text-end">{{ number_format($totalBasic, 2) }}</td>
                             <td class="text-end">{{ number_format($totalDiscount, 2) }}</td>

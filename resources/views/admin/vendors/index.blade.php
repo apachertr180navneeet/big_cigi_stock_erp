@@ -6,7 +6,11 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Vendor List</h5>
-            <a href="{{ route('admin.vendors.create') }}" class="btn btn-primary">Add Vendor</a>
+            <div>
+                <a href="{{ route('admin.vendors.template') }}" class="btn btn-secondary">Download Template</a>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">Import Excel</button>
+                <a href="{{ route('admin.vendors.create') }}" class="btn btn-primary">Add Vendor</a>
+            </div>
         </div>
         <div class="table-responsive text-nowrap">
             <table class="table">
@@ -46,6 +50,29 @@
         <div class="d-flex justify-content-center mt-3">
             {{ $vendors->links() }}
         </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('admin.vendors.import') }}" method="POST" enctype="multipart/form-data" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Import Vendors from Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="file" class="form-label">Choose Excel File</label>
+                    <input type="file" class="form-control" name="file" accept=".xlsx,.xls,.csv" required>
+                </div>
+                <p class="text-muted small">Accepted formats: .xlsx, .xls, .csv. Headers: Name, Phone, Address, Status.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-success">Import</button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

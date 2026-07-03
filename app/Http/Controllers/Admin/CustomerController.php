@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 
+use App\Exports\CustomerTemplateExport;
+use App\Imports\CustomerImport;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerController extends Controller
 {
@@ -66,6 +69,25 @@ class CustomerController extends Controller
             return response()->json(['success' => true, 'message' => 'Status updated successfully.', 'status' => $customer->status]);
         }
         return response()->json(['success' => false, 'message' => 'Customer not found.'], 404);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            Excel::import(new CustomerImport, $request->file('file'));
+            return redirect()->route('admin.customers.index')->with('success', 'Customers imported successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.customers.index')->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new CustomerTemplateExport, 'customer_template.xlsx');
     }
 }
 

@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 
+use App\Exports\ItemMasterTemplateExport;
+use App\Imports\ItemMasterImport;
 use App\Models\ItemMaster;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ItemMasterController extends Controller
 {
@@ -68,6 +71,25 @@ class ItemMasterController extends Controller
             return response()->json(['success' => true, 'message' => 'Status updated successfully.', 'status' => $itemMaster->status]);
         }
         return response()->json(['success' => false, 'message' => 'Item not found.'], 404);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            Excel::import(new ItemMasterImport, $request->file('file'));
+            return redirect()->route('admin.item_masters.index')->with('success', 'Items imported successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.item_masters.index')->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new ItemMasterTemplateExport, 'item_master_template.xlsx');
     }
 }
 

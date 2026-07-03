@@ -218,11 +218,15 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="7" class="border-0"></td>
+                                <td colspan="3" class="text-end fw-bold" style="vertical-align: middle;">Total:</td>
+                                <td><div class="computed-cell fw-bold" id="totalPackages">0.00</div></td>
+                                <td class="border-0"></td>
+                                <td><div class="computed-cell fw-bold" id="totalQty">0.00</div></td>
+                                <td class="border-0"></td>
                                 <td><div class="computed-cell fw-bold" id="totalBasic">0.00</div></td>
-                                <td class="border-0"></td>
+                                <td><div class="computed-cell fw-bold" id="totalDiscount">0.00</div></td>
                                 <td><div class="computed-cell fw-bold" id="totalNet">0.00</div></td>
-                                <td class="border-0"></td>
+                                <td><div class="computed-cell fw-bold" id="totalPackets">0.00</div></td>
                                 <td class="border-0"></td>
                                 <td><div class="computed-cell fw-bold" id="totalTaxable">0.00</div></td>
                                 <td class="border-0"></td>
@@ -304,7 +308,14 @@
         }
 
         function calculateGrandTotal() {
+            let totalPackages = 0, totalQty = 0, totalDiscount = 0, totalPackets = 0;
             let totalBasic = 0, totalNet = 0, totalTV = 0, totalTaxable = 0, totalCGST = 0, totalSGST = 0, grandTotal = 0;
+
+            $('.package-input').each(function() { totalPackages += (parseFloat($(this).val()) || 0); });
+            $('.qty-input').each(function() { totalQty += (parseFloat($(this).val()) || 0); });
+            $('.discount-input').each(function() { totalDiscount += (parseFloat($(this).val()) || 0); });
+            $('.packets-input').each(function() { totalPackets += (parseFloat($(this).val()) || 0); });
+
             $('.basic-display').each(function() { totalBasic += ($(this).data('val') || 0); });
             $('.net-display').each(function() { totalNet += ($(this).data('val') || 0); });
             $('.tv-display').each(function() { totalTV += ($(this).data('val') || 0); });
@@ -313,6 +324,10 @@
             $('.sgst-amt-display').each(function() { totalSGST += ($(this).data('val') || 0); });
             $('.amount-display').each(function() { grandTotal += ($(this).data('val') || 0); });
 
+            $('#totalPackages').text(formatNum(totalPackages));
+            $('#totalQty').text(formatNum(totalQty));
+            $('#totalDiscount').text(formatNum(totalDiscount));
+            $('#totalPackets').text(formatNum(totalPackets));
             $('#totalBasic').text(formatNum(totalBasic));
             $('#totalNet').text(formatNum(totalNet));
             $('#totalTV').text(formatNum(totalTV));
@@ -376,7 +391,7 @@
             }
         });
 
-        $(document).on('input', '.qty-input, .rate-input, .discount-input, .packets-input, .mrp-input, .cgst-rate-input, .sgst-rate-input', function() {
+        $(document).on('input', '.package-input, .qty-input, .rate-input, .discount-input, .packets-input, .mrp-input, .cgst-rate-input, .sgst-rate-input', function() {
             let row = $(this).closest('tr');
             calculateRow(row);
         });
