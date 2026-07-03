@@ -35,8 +35,15 @@ class PurchaseController extends Controller
             'bill_date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required',
+            'items.*.no_of_package' => 'nullable|numeric|min:0',
+            'items.*.uom' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.rate' => 'required|numeric|min:0',
+            'items.*.discount_amount' => 'nullable|numeric|min:0',
+            'items.*.packets' => 'required|numeric|min:0',
+            'items.*.mrp' => 'required|numeric|min:0',
+            'items.*.cgst_rate' => 'nullable|numeric|min:0',
+            'items.*.sgst_rate' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -44,7 +51,24 @@ class PurchaseController extends Controller
         try {
             $total_amount = 0;
             foreach ($request->items as $itemData) {
-                $total_amount += ($itemData['quantity'] * $itemData['rate']);
+                $qty = $itemData['quantity'];
+                $rate = $itemData['rate'];
+                $discount = $itemData['discount_amount'] ?? 0;
+                $packets = $itemData['packets'];
+                $mrp = $itemData['mrp'];
+                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
+                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+
+                $basic_value = round($qty * $rate, 2);
+                $net_amount = round($basic_value - $discount, 2);
+                $total_value = round($packets * $mrp, 2);
+                $taxable_value = round($total_value / 1.40, 2);
+                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
+                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
+                $tax_amount = $cgst_amount + $sgst_amount;
+                $item_amount = $net_amount + $tax_amount;
+
+                $total_amount += $item_amount;
             }
 
             $purchase = Purchase::create([
@@ -56,25 +80,51 @@ class PurchaseController extends Controller
             ]);
 
             foreach ($request->items as $itemData) {
-                $amount = $itemData['quantity'] * $itemData['rate'];
+                $qty = $itemData['quantity'];
+                $rate = $itemData['rate'];
+                $discount = $itemData['discount_amount'] ?? 0;
+                $packets = $itemData['packets'];
+                $mrp = $itemData['mrp'];
+                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
+                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+
+                $basic_value = round($qty * $rate, 2);
+                $net_amount = round($basic_value - $discount, 2);
+                $total_value = round($packets * $mrp, 2);
+                $taxable_value = round($total_value / 1.40, 2);
+                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
+                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
+                $tax_amount = $cgst_amount + $sgst_amount;
+                $amount = $net_amount + $tax_amount;
                 
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'item_id' => $itemData['item_id'],
-                    'quantity' => $itemData['quantity'],
-                    'rate' => $itemData['rate'],
+                    'no_of_package' => $itemData['no_of_package'] ?? 0,
+                    'uom' => $itemData['uom'] ?? null,
+                    'quantity' => $qty,
+                    'rate' => $rate,
+                    'discount_amount' => $discount,
+                    'packets' => $packets,
+                    'mrp' => $mrp,
+                    'taxable_value' => $taxable_value,
+                    'cgst_rate' => $cgst_rate,
+                    'cgst_amount' => $cgst_amount,
+                    'sgst_rate' => $sgst_rate,
+                    'sgst_amount' => $sgst_amount,
+                    'tax_amount' => $tax_amount,
                     'amount' => $amount,
                 ]);
 
                 // Update Stock
                 $item = ItemMaster::find($itemData['item_id']);
-                $newStock = $item->current_stock + $itemData['quantity'];
+                $newStock = $item->current_stock + $qty;
                 
                 StockLedger::create([
                     'item_id' => $item->id,
                     'transaction_type' => 'purchase',
                     'transaction_id' => $purchase->id,
-                    'quantity' => $itemData['quantity'],
+                    'quantity' => $qty,
                     'running_balance' => $newStock,
                 ]);
 

@@ -12,8 +12,19 @@ class PurchaseItem extends Model
     protected $fillable = [
         'purchase_id',
         'item_id',
+        'no_of_package',
+        'uom',
         'quantity',
         'rate',
+        'discount_amount',
+        'packets',
+        'mrp',
+        'taxable_value',
+        'cgst_rate',
+        'cgst_amount',
+        'sgst_rate',
+        'sgst_amount',
+        'tax_amount',
         'amount',
     ];
 
