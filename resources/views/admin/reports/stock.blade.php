@@ -24,7 +24,7 @@
                         <td>{{ $item->name }}</td>
                         <td>{{ $item->hsn }}</td>
                         <td>{{ $item->brand_code }}</td>
-                        <td><strong>{{ $item->current_stock }}</strong> {{ $item->sales_uom }}</td>
+                        <td><strong>{{ $item->current_stock }}</strong></td>
                         <td>
                             <a href="{{ route('admin.reports.ledger', $item->id) }}" class="btn btn-sm btn-info">View Ledger</a>
                         </td>

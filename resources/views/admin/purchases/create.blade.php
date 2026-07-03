@@ -56,7 +56,7 @@
                                 <select name="items[0][item_id]" class="form-select item-select" required>
                                     <option value="">Select Item</option>
                                     @foreach($items as $item)
-                                        <option value="{{ $item->id }}" data-rate="{{ $item->purchase_rate }}">{{ $item->name }}</option>
+                                        <option value="{{ $item->id }}">{{ $item->name }}</option>
                                     @endforeach
                                 </select>
                             </td>
@@ -85,7 +85,7 @@
         $('#addRow').click(function() {
             let options = '<option value="">Select Item</option>';
             @foreach($items as $item)
-                options += '<option value="{{ $item->id }}" data-rate="{{ $item->purchase_rate }}">{{ $item->name }}</option>';
+                options += '<option value="{{ $item->id }}">{{ $item->name }}</option>';
             @endforeach
             let newRow = `<tr>
                 <td>
@@ -108,10 +108,6 @@
         });
 
         $(document).on('change', '.item-select', function() {
-            let rate = $(this).find(':selected').data('rate');
-            if(rate) {
-                $(this).closest('tr').find('.rate-input').val(rate);
-            }
         });
     });
 </script>
