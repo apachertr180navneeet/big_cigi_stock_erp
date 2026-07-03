@@ -9,7 +9,10 @@
             <a href="{{ route('admin.reports.stock') }}" class="btn btn-sm btn-secondary">Back</a>
         </div>
         <div class="card-body">
-            <p><strong>Current Stock:</strong> {{ $item->current_stock }}</p>
+            <p>
+                <strong>Pack Size:</strong> {{ $item->pack_size }} units per pack &nbsp;|&nbsp;
+                <strong>Current Stock:</strong> {{ $item->current_stock }} units ({{ $item->pack_size > 0 ? intval($item->current_stock / $item->pack_size) : 0 }} packs)
+            </p>
             <div class="table-responsive text-nowrap mt-3">
                 <table class="table table-striped table-bordered">
                     <thead>

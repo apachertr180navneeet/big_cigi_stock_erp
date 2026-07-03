@@ -14,7 +14,10 @@
                         <th>Item Name</th>
                         <th>HSN</th>
                         <th>Brand Code</th>
-                        <th>Current Stock</th>
+                        <th>Pack Size</th>
+                        <th>Opening Stock</th>
+                        <th>Current Stock (Units)</th>
+                        <th>Current Stock (Packs)</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -24,14 +27,17 @@
                         <td>{{ $item->name }}</td>
                         <td>{{ $item->hsn }}</td>
                         <td>{{ $item->brand_code }}</td>
+                        <td>{{ $item->pack_size }}</td>
+                        <td>{{ $item->opening_stock }}</td>
                         <td><strong>{{ $item->current_stock }}</strong></td>
+                        <td>{{ $item->pack_size > 0 ? intval($item->current_stock / $item->pack_size) : 0 }}</td>
                         <td>
                             <a href="{{ route('admin.reports.ledger', $item->id) }}" class="btn btn-sm btn-info">View Ledger</a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center">No items found</td>
+                        <td colspan="8" class="text-center">No items found</td>
                     </tr>
                     @endforelse
                 </tbody>

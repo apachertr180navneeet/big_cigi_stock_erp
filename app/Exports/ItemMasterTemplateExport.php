@@ -12,7 +12,7 @@ class ItemMasterTemplateExport implements FromArray, WithHeadings, WithStyles
     public function array(): array
     {
         return [
-            ['Sample Item', 'Sample description', '12345678', 'BR001', '100', 'Active'],
+            ['Sample Item', 'Sample description', '12345678', 'BR001', '50', '100', '12', 'Active'],
         ];
     }
 
@@ -23,7 +23,9 @@ class ItemMasterTemplateExport implements FromArray, WithHeadings, WithStyles
             'Description',
             'HSN',
             'Brand Code',
+            'Opening Stock',
             'Current Stock',
+            'Pack Size',
             'Status',
         ];
     }

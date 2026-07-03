@@ -19,6 +19,9 @@
                         <th>Name</th>
                         <th>HSN</th>
                         <th>Brand Code</th>
+                        <th>Pack Size</th>
+                        <th>Stock (Units)</th>
+                        <th>Stock (Packs)</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -29,6 +32,9 @@
                         <td>{{ $item->name }}</td>
                         <td>{{ $item->hsn }}</td>
                         <td>{{ $item->brand_code }}</td>
+                        <td>{{ $item->pack_size }}</td>
+                        <td>{{ $item->current_stock }}</td>
+                        <td>{{ intval($item->current_stock / $item->pack_size) }}</td>
                         <td>
                             <div class="form-check form-switch">
                                 <input class="form-check-input status-toggle" type="checkbox" id="status-{{ $item->id }}" data-id="{{ $item->id }}" {{ $item->status ? 'checked' : '' }}>
@@ -41,7 +47,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center">No data found</td>
+                        <td colspan="8" class="text-center">No data found</td>
                     </tr>
                     @endforelse
                 </tbody>

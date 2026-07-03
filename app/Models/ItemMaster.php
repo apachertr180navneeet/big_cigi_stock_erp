@@ -16,6 +16,8 @@ class ItemMaster extends Model
         'hsn',
         'brand_code',
         'current_stock',
+        'opening_stock',
+        'pack_size',
         'status',
     ];
 }

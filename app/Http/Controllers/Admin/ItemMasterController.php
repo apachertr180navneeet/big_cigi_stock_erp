@@ -30,6 +30,7 @@ class ItemMasterController extends Controller
             'description' => 'nullable|string',
             'hsn' => 'nullable|string|max:255',
             'brand_code' => 'nullable|string|max:255',
+            'pack_size' => 'nullable|integer|min:1',
         ]);
 
         ItemMaster::create($request->all());
@@ -49,6 +50,7 @@ class ItemMasterController extends Controller
             'description' => 'nullable|string',
             'hsn' => 'nullable|string|max:255',
             'brand_code' => 'nullable|string|max:255',
+            'pack_size' => 'nullable|integer|min:1',
         ]);
 
         $itemMaster->update($request->all());

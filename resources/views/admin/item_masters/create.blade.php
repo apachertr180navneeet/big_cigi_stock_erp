@@ -36,6 +36,22 @@
                         @enderror
                     </div>
 
+                    <h6 class="mb-3 mt-4">Stock Details</h6>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="opening_stock">Opening Stock (Units)</label>
+                        <input type="number" step="0.01" class="form-control @error('opening_stock') is-invalid @enderror" id="opening_stock" name="opening_stock" value="{{ old('opening_stock', 0) }}" />
+                        @error('opening_stock')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="pack_size">Pack Size (Units per Pack)</label>
+                        <input type="number" min="1" class="form-control @error('pack_size') is-invalid @enderror" id="pack_size" name="pack_size" value="{{ old('pack_size', 1) }}" />
+                        @error('pack_size')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <h6 class="mb-3 mt-4">Other Details</h6>
                     <div class="col-md-12 mb-3">
                         <label class="form-label" for="description">Description</label>
