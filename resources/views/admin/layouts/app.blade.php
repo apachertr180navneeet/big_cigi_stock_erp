@@ -23,6 +23,7 @@
         <script src="{{asset('assets/admin/vendor/js/helpers.js')}}"></script>
         <script src="{{asset('assets/admin/js/config.js')}}"></script>
         <link rel="stylesheet" href="{{asset('assets/admin/css/sweet-alert.css')}}" />
+        <link rel="stylesheet" href="{{asset('assets/admin/css/custom.css')}}" />
         @yield('style')
         <style>
             
