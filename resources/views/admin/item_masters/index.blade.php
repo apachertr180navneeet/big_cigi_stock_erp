@@ -15,6 +15,8 @@
                         <th>Name</th>
                         <th>HSN</th>
                         <th>Brand Code</th>
+                        <th>Purchase UOM</th>
+                        <th>Sales UOM</th>
                         <th>MRP</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -26,6 +28,8 @@
                         <td>{{ $item->name }}</td>
                         <td>{{ $item->hsn }}</td>
                         <td>{{ $item->brand_code }}</td>
+                        <td>{{ $item->purchase_uom }}</td>
+                        <td>{{ $item->sales_uom }}</td>
                         <td>{{ $item->mrp }}</td>
                         <td>
                             <div class="form-check form-switch">
@@ -39,7 +43,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center">No data found</td>
+                        <td colspan="8" class="text-center">No data found</td>
                     </tr>
                     @endforelse
                 </tbody>

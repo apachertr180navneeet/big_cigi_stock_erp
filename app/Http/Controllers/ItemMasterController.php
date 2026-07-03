@@ -25,7 +25,15 @@ class ItemMasterController extends Controller
             'description' => 'nullable|string',
             'hsn' => 'nullable|string|max:255',
             'brand_code' => 'nullable|string|max:255',
+            'purchase_uom' => 'nullable|string|max:255',
+            'sales_uom' => 'nullable|string|max:255',
+            'conversion_factor' => 'nullable|numeric|min:0',
             'mrp' => 'nullable|numeric|min:0',
+            'purchase_rate' => 'nullable|numeric|min:0',
+            'sales_rate' => 'nullable|numeric|min:0',
+            'cgst_percentage' => 'nullable|numeric|min:0|max:100',
+            'sgst_percentage' => 'nullable|numeric|min:0|max:100',
+            'cess_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         ItemMaster::create($request->all());
@@ -45,7 +53,15 @@ class ItemMasterController extends Controller
             'description' => 'nullable|string',
             'hsn' => 'nullable|string|max:255',
             'brand_code' => 'nullable|string|max:255',
+            'purchase_uom' => 'nullable|string|max:255',
+            'sales_uom' => 'nullable|string|max:255',
+            'conversion_factor' => 'nullable|numeric|min:0',
             'mrp' => 'nullable|numeric|min:0',
+            'purchase_rate' => 'nullable|numeric|min:0',
+            'sales_rate' => 'nullable|numeric|min:0',
+            'cgst_percentage' => 'nullable|numeric|min:0|max:100',
+            'sgst_percentage' => 'nullable|numeric|min:0|max:100',
+            'cess_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $itemMaster->update($request->all());

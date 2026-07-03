@@ -15,7 +15,15 @@ class ItemMaster extends Model
         'description',
         'hsn',
         'brand_code',
+        'purchase_uom',
+        'sales_uom',
+        'conversion_factor',
         'mrp',
+        'purchase_rate',
+        'sales_rate',
+        'cgst_percentage',
+        'sgst_percentage',
+        'cess_percentage',
         'status',
     ];
 }
