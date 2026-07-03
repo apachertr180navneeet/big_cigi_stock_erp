@@ -64,6 +64,25 @@
 			</a>
 		</li>
 
-
+        <!-- Masters -->
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Masters</span></li>
+        <li class="menu-item {{ request()->is('admin/customers*') ? 'active' : ''}}">
+            <a href="{{route('admin.customers.index')}}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-user"></i>
+                <div data-i18n="Customers">Customers</div>
+            </a>
+        </li>
+        <li class="menu-item {{ request()->is('admin/vendors*') ? 'active' : ''}}">
+            <a href="{{route('admin.vendors.index')}}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-store"></i>
+                <div data-i18n="Vendors">Vendors</div>
+            </a>
+        </li>
+        <li class="menu-item {{ request()->is('admin/item_masters*') ? 'active' : ''}}">
+            <a href="{{route('admin.item_masters.index')}}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-box"></i>
+                <div data-i18n="Item Masters">Item Masters</div>
+            </a>
+        </li>
 	</ul>
 </aside>

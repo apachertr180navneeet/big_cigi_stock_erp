@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\VendorController;
+use App\Http\Controllers\ItemMasterController;
 
 
 /*
@@ -48,10 +51,14 @@ Route::name('admin.')->prefix('admin')->group(function () {
 
         Route::post('profile', [AdminAuthController::class, 'updateAdminProfile'])->name('update.profile');
 
+        Route::post('customers/change-status', [CustomerController::class, 'changeStatus'])->name('customers.change-status');
+        Route::resource('customers', CustomerController::class);
 
+        Route::post('vendors/change-status', [VendorController::class, 'changeStatus'])->name('vendors.change-status');
+        Route::resource('vendors', VendorController::class);
 
-
-
+        Route::post('item-masters/change-status', [ItemMasterController::class, 'changeStatus'])->name('item_masters.change-status');
+        Route::resource('item_masters', ItemMasterController::class);
 
     });
 
