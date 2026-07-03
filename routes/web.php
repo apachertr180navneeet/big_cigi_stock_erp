@@ -3,9 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Admin\AdminAuthController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\VendorController;
-use App\Http\Controllers\ItemMasterController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\VendorController;
+use App\Http\Controllers\Admin\ItemMasterController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\SaleController;
+use App\Http\Controllers\Admin\ReportController;
 
 
 /*
@@ -60,10 +63,10 @@ Route::name('admin.')->prefix('admin')->group(function () {
         Route::post('item-masters/change-status', [ItemMasterController::class, 'changeStatus'])->name('item_masters.change-status');
         Route::resource('item_masters', ItemMasterController::class);
 
-        Route::resource('purchases', \App\Http\Controllers\PurchaseController::class);
-        Route::resource('sales', \App\Http\Controllers\SaleController::class);
-        Route::get('reports/stock', [\App\Http\Controllers\ReportController::class, 'stockReport'])->name('reports.stock');
-        Route::get('reports/ledger/{id}', [\App\Http\Controllers\ReportController::class, 'stockLedger'])->name('reports.ledger');
+        Route::resource('purchases', PurchaseController::class);
+        Route::resource('sales', SaleController::class);
+        Route::get('reports/stock', [ReportController::class, 'stockReport'])->name('reports.stock');
+        Route::get('reports/ledger/{id}', [ReportController::class, 'stockLedger'])->name('reports.ledger');
 
     });
 

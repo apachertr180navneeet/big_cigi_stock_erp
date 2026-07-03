@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Vendor;
 use Illuminate\Http\Request;
@@ -66,3 +68,4 @@ class VendorController extends Controller
         return response()->json(['success' => false, 'message' => 'Vendor not found.'], 404);
     }
 }
+

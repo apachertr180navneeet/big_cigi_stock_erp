@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
 use App\Models\ItemMaster;
@@ -21,3 +23,4 @@ class ReportController extends Controller
         return view('admin.reports.ledger', compact('item', 'ledgers'));
     }
 }
+

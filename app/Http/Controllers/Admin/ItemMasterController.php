@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\ItemMaster;
 use Illuminate\Http\Request;
@@ -84,3 +86,4 @@ class ItemMasterController extends Controller
         return response()->json(['success' => false, 'message' => 'Item not found.'], 404);
     }
 }
+

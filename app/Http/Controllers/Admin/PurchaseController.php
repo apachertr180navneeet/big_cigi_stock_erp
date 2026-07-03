@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
 use App\Models\Purchase;
@@ -94,3 +96,4 @@ class PurchaseController extends Controller
         return view('admin.purchases.show', compact('purchase'));
     }
 }
+

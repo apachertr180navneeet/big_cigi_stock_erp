@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Customer;
+use App\Models\Vendor;
+use App\Models\ItemMaster;
+use App\Models\Purchase;
+use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Mail, DB, Hash, Validator, Session, File,Exception;
@@ -269,13 +274,13 @@ class AdminAuthController extends Controller
 
     public function adminDashboard()
     {
-        $totalCustomers = \App\Models\Customer::count();
-        $totalVendors = \App\Models\Vendor::count();
-        $totalItems = \App\Models\ItemMaster::count();
-        $totalPurchases = \App\Models\Purchase::count();
-        $totalSales = \App\Models\Sale::count();
-        $totalPurchaseAmount = \App\Models\Purchase::sum('total_amount');
-        $totalSaleAmount = \App\Models\Sale::sum('total_amount');
+        $totalCustomers = Customer::count();
+        $totalVendors = Vendor::count();
+        $totalItems = ItemMaster::count();
+        $totalPurchases = Purchase::count();
+        $totalSales = Sale::count();
+        $totalPurchaseAmount = Purchase::sum('total_amount');
+        $totalSaleAmount = Sale::sum('total_amount');
         
         return view("admin.dashboard.index", compact(
             'totalCustomers', 'totalVendors', 'totalItems', 
