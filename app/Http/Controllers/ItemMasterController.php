@@ -33,7 +33,6 @@ class ItemMasterController extends Controller
             'sales_rate' => 'nullable|numeric|min:0',
             'cgst_percentage' => 'nullable|numeric|min:0|max:100',
             'sgst_percentage' => 'nullable|numeric|min:0|max:100',
-            'cess_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         ItemMaster::create($request->all());
@@ -61,7 +60,6 @@ class ItemMasterController extends Controller
             'sales_rate' => 'nullable|numeric|min:0',
             'cgst_percentage' => 'nullable|numeric|min:0|max:100',
             'sgst_percentage' => 'nullable|numeric|min:0|max:100',
-            'cess_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $itemMaster->update($request->all());

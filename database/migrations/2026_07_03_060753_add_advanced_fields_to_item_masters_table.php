@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('sales_rate', 10, 2)->default(0)->after('purchase_rate');
             $table->decimal('cgst_percentage', 5, 2)->default(0)->after('sales_rate');
             $table->decimal('sgst_percentage', 5, 2)->default(0)->after('cgst_percentage');
-            $table->decimal('cess_percentage', 5, 2)->default(0)->after('sgst_percentage');
         });
     }
 
@@ -36,8 +35,7 @@ return new class extends Migration
                 'purchase_rate',
                 'sales_rate',
                 'cgst_percentage',
-                'sgst_percentage',
-                'cess_percentage'
+                'sgst_percentage'
             ]);
         });
     }

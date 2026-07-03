@@ -97,13 +97,6 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label" for="cess_percentage">Cess %</label>
-                        <input type="number" step="0.01" class="form-control @error('cess_percentage') is-invalid @enderror" id="cess_percentage" name="cess_percentage" value="{{ old('cess_percentage', $itemMaster->cess_percentage) }}" />
-                        @error('cess_percentage')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
 
                     <h6 class="mb-3 mt-4">Other Details</h6>
                     <div class="col-md-12 mb-3">
