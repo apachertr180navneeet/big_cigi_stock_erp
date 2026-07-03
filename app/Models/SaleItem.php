@@ -12,8 +12,22 @@ class SaleItem extends Model
     protected $fillable = [
         'sale_id',
         'item_id',
+        'no_of_package',
+        'uom',
         'quantity',
+        'free_qty',
         'rate',
+        'discount_percent',
+        'discount_amount',
+        'other_discount',
+        'packets',
+        'mrp',
+        'taxable_value',
+        'cgst_rate',
+        'cgst_amount',
+        'sgst_rate',
+        'sgst_amount',
+        'tax_amount',
         'amount',
     ];
 
