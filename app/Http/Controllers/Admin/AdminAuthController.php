@@ -269,7 +269,18 @@ class AdminAuthController extends Controller
 
     public function adminDashboard()
     {
-        return view("admin.dashboard.index");
+        $totalCustomers = \App\Models\Customer::count();
+        $totalVendors = \App\Models\Vendor::count();
+        $totalItems = \App\Models\ItemMaster::count();
+        $totalPurchases = \App\Models\Purchase::count();
+        $totalSales = \App\Models\Sale::count();
+        $totalPurchaseAmount = \App\Models\Purchase::sum('total_amount');
+        $totalSaleAmount = \App\Models\Sale::sum('total_amount');
+        
+        return view("admin.dashboard.index", compact(
+            'totalCustomers', 'totalVendors', 'totalItems', 
+            'totalPurchases', 'totalSales', 'totalPurchaseAmount', 'totalSaleAmount'
+        ));
     }
 
 
