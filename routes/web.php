@@ -71,6 +71,7 @@ Route::name('admin.')->prefix('admin')->group(function () {
 
         Route::resource('purchases', PurchaseController::class);
         Route::resource('sales', SaleController::class);
+        Route::get('sales/{id}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');
         Route::get('reports/stock', [ReportController::class, 'stockReport'])->name('reports.stock');
         Route::get('reports/ledger/{id}', [ReportController::class, 'stockLedger'])->name('reports.ledger');
 

@@ -3,7 +3,7 @@
 @section('style')
 <style>
     #itemsTable {
-        min-width: 2600px;
+        min-width: 100%;
     }
     #itemsTable thead th {
         font-size: 0.75rem;
@@ -191,35 +191,15 @@
                     <table class="table table-bordered align-middle mb-0" id="itemsTable">
                         <thead>
                             <tr>
-                                <th class="auto-head" style="min-width: 90px;">HSN Code</th>
-                                <th class="auto-head" style="min-width: 90px;">Brand Code</th>
                                 <th style="min-width: 250px;">Product Description</th>
-                                <th style="min-width: 100px;">No. of Pkg</th>
-                                <th style="min-width: 80px;">UOM</th>
                                 <th style="min-width: 90px;">QTY</th>
-                                <th style="min-width: 80px;">Free</th>
                                 <th style="min-width: 110px;">Rate</th>
-                                <th class="computed-head" style="min-width: 120px;">Gross Amt</th>
-                                <th style="min-width: 80px;">Disc%</th>
-                                <th style="min-width: 100px;">Disc Amt</th>
-                                <th style="min-width: 100px;">Other Disc</th>
-                                <th class="computed-head" style="min-width: 120px;">Net Amount</th>
-                                <th style="min-width: 100px;">Retail Packs</th>
-                                <th style="min-width: 100px;">MRP</th>
-                                <th class="computed-head" style="min-width: 125px;">Value for GST</th>
-                                <th style="min-width: 80px;">CGST %</th>
-                                <th class="computed-head" style="min-width: 115px;">CGST Amt</th>
-                                <th style="min-width: 80px;">SGST %</th>
-                                <th class="computed-head" style="min-width: 115px;">SGST Amt</th>
-                                <th class="computed-head" style="min-width: 115px;">Tot. Tax</th>
                                 <th class="computed-head" style="min-width: 130px;">Total Amount</th>
                                 <th style="min-width: 60px;">Act</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><div class="auto-field hs-display">-</div></td>
-                                <td><div class="auto-field brand-display">-</div></td>
                                 <td>
                                     <select name="items[0][item_id]" class="form-select item-select" required>
                                         <option value="">Select Item</option>
@@ -228,49 +208,17 @@
                                         @endforeach
                                     </select>
                                 </td>
-                                <td><input type="number" step="0.01" name="items[0][no_of_package]" class="form-control package-input text-end" placeholder="0"></td>
-                                <td><input type="text" name="items[0][uom]" class="form-control uom-input text-center" placeholder="UOM"></td>
                                 <td><input type="number" step="0.01" name="items[0][quantity]" class="form-control qty-input text-end" required placeholder="0"></td>
-                                <td><input type="number" step="0.01" name="items[0][free_qty]" class="form-control free-input text-end" placeholder="0" value="0"></td>
                                 <td><input type="number" step="0.01" name="items[0][rate]" class="form-control rate-input text-end" required placeholder="0.00"></td>
-                                <td class="computed-col"><div class="computed-cell basic-display">0.00</div></td>
-                                <td><input type="number" step="0.01" name="items[0][discount_percent]" class="form-control disc-pct-input text-end" placeholder="0" value="0"></td>
-                                <td><input type="number" step="0.01" name="items[0][discount_amount]" class="form-control discount-input text-end" placeholder="0.00" value="0.00"></td>
-                                <td><input type="number" step="0.01" name="items[0][other_discount]" class="form-control other-disc-input text-end" placeholder="0.00" value="0.00"></td>
-                                <td class="computed-col"><div class="computed-cell net-display">0.00</div></td>
-                                <td><input type="number" step="0.01" name="items[0][packets]" class="form-control packets-input text-end" required placeholder="0"></td>
-                                <td><input type="number" step="0.01" name="items[0][mrp]" class="form-control mrp-input text-end" required placeholder="0.00"></td>
-                                <td class="computed-col"><div class="computed-cell taxable-display">0.00</div></td>
-                                <td><input type="number" step="0.01" name="items[0][cgst_rate]" class="form-control cgst-rate-input text-end" value="20.00"></td>
-                                <td class="computed-col"><div class="computed-cell cgst-amt-display">0.00</div></td>
-                                <td><input type="number" step="0.01" name="items[0][sgst_rate]" class="form-control sgst-rate-input text-end" value="20.00"></td>
-                                <td class="computed-col"><div class="computed-cell sgst-amt-display">0.00</div></td>
-                                <td class="computed-col"><div class="computed-cell tax-display">0.00</div></td>
                                 <td class="computed-col"><div class="computed-cell total-cell amount-display">0.00</div></td>
                                 <td class="text-center"><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-row"><i class="bx bx-trash"></i></button></td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="3" class="text-end fw-bold" style="vertical-align: middle;">Total:</td>
-                                <td><div class="computed-cell fw-bold" id="totalPackages">0.00</div></td>
-                                <td class="border-0"></td>
+                                <td class="text-end fw-bold" style="vertical-align: middle;">Total:</td>
                                 <td><div class="computed-cell fw-bold" id="totalQty">0.00</div></td>
-                                <td><div class="computed-cell fw-bold" id="totalFree">0.00</div></td>
                                 <td class="border-0"></td>
-                                <td><div class="computed-cell fw-bold" id="totalBasic">0.00</div></td>
-                                <td class="border-0"></td>
-                                <td><div class="computed-cell fw-bold" id="totalDiscount">0.00</div></td>
-                                <td><div class="computed-cell fw-bold" id="totalOtherDisc">0.00</div></td>
-                                <td><div class="computed-cell fw-bold" id="totalNet">0.00</div></td>
-                                <td><div class="computed-cell fw-bold" id="totalPackets">0.00</div></td>
-                                <td class="border-0"></td>
-                                <td><div class="computed-cell fw-bold" id="totalTaxable">0.00</div></td>
-                                <td class="border-0"></td>
-                                <td><div class="computed-cell fw-bold" id="totalCGST">0.00</div></td>
-                                <td class="border-0"></td>
-                                <td><div class="computed-cell fw-bold" id="totalSGST">0.00</div></td>
-                                <td><div class="computed-cell fw-bold" id="totalTax">0.00</div></td>
                                 <td><div class="computed-cell total-cell fw-bold" id="grandTotal">0.00</div></td>
                                 <td class="border-0"></td>
                             </tr>
@@ -354,72 +302,21 @@
         function calculateRow(row) {
             let qty = parseFloat(row.find('.qty-input').val()) || 0;
             let rate = parseFloat(row.find('.rate-input').val()) || 0;
-            let disc_pct = parseFloat(row.find('.disc-pct-input').val()) || 0;
-            let disc_amt = parseFloat(row.find('.discount-input').val()) || 0;
-            let other_disc = parseFloat(row.find('.other-disc-input').val()) || 0;
-            let packets = parseFloat(row.find('.packets-input').val()) || 0;
-            let mrp = parseFloat(row.find('.mrp-input').val()) || 0;
-            let cgst_rate = parseFloat(row.find('.cgst-rate-input').val()) || 0;
-            let sgst_rate = parseFloat(row.find('.sgst-rate-input').val()) || 0;
 
-            let basic_value = Math.round((qty * rate) * 100) / 100;
+            let amount = Math.round((qty * rate) * 100) / 100;
 
-            // If disc% is given and disc_amt is 0, calculate disc_amt from percentage
-            if (disc_pct > 0 && disc_amt === 0) {
-                disc_amt = Math.round((basic_value * (disc_pct / 100)) * 100) / 100;
-                row.find('.discount-input').val(disc_amt.toFixed(2));
-            }
-
-            let net_amount = Math.round((basic_value - disc_amt - other_disc) * 100) / 100;
-            let total_value = Math.round((packets * mrp) * 100) / 100;
-            let taxable_value = Math.round((total_value / 1.40) * 100) / 100;
-            let cgst_amount = Math.round((taxable_value * (cgst_rate / 100)) * 100) / 100;
-            let sgst_amount = Math.round((taxable_value * (sgst_rate / 100)) * 100) / 100;
-            let tax_amount = cgst_amount + sgst_amount;
-            let amount = Math.round((net_amount + tax_amount) * 100) / 100;
-
-            row.find('.basic-display').text(formatNum(basic_value)).data('val', basic_value);
-            row.find('.net-display').text(formatNum(net_amount)).data('val', net_amount);
-            row.find('.taxable-display').text(formatNum(taxable_value)).data('val', taxable_value);
-            row.find('.cgst-amt-display').text(formatNum(cgst_amount)).data('val', cgst_amount);
-            row.find('.sgst-amt-display').text(formatNum(sgst_amount)).data('val', sgst_amount);
-            row.find('.tax-display').text(formatNum(tax_amount)).data('val', tax_amount);
             row.find('.amount-display').text(formatNum(amount)).data('val', amount);
 
             calculateGrandTotal();
         }
 
         function calculateGrandTotal() {
-            let totalPackages = 0, totalQty = 0, totalFree = 0, totalDiscount = 0, totalOtherDisc = 0, totalPackets = 0;
-            let totalBasic = 0, totalNet = 0, totalTaxable = 0, totalCGST = 0, totalSGST = 0, totalTaxAmt = 0, grandTotal = 0;
+            let totalQty = 0, grandTotal = 0;
 
-            $('.package-input').each(function() { totalPackages += (parseFloat($(this).val()) || 0); });
             $('.qty-input').each(function() { totalQty += (parseFloat($(this).val()) || 0); });
-            $('.free-input').each(function() { totalFree += (parseFloat($(this).val()) || 0); });
-            $('.discount-input').each(function() { totalDiscount += (parseFloat($(this).val()) || 0); });
-            $('.other-disc-input').each(function() { totalOtherDisc += (parseFloat($(this).val()) || 0); });
-            $('.packets-input').each(function() { totalPackets += (parseFloat($(this).val()) || 0); });
-
-            $('.basic-display').each(function() { totalBasic += ($(this).data('val') || 0); });
-            $('.net-display').each(function() { totalNet += ($(this).data('val') || 0); });
-            $('.taxable-display').each(function() { totalTaxable += ($(this).data('val') || 0); });
-            $('.cgst-amt-display').each(function() { totalCGST += ($(this).data('val') || 0); });
-            $('.sgst-amt-display').each(function() { totalSGST += ($(this).data('val') || 0); });
-            $('.tax-display').each(function() { totalTaxAmt += ($(this).data('val') || 0); });
             $('.amount-display').each(function() { grandTotal += ($(this).data('val') || 0); });
 
-            $('#totalPackages').text(formatNum(totalPackages));
             $('#totalQty').text(formatNum(totalQty));
-            $('#totalFree').text(formatNum(totalFree));
-            $('#totalDiscount').text(formatNum(totalDiscount));
-            $('#totalOtherDisc').text(formatNum(totalOtherDisc));
-            $('#totalPackets').text(formatNum(totalPackets));
-            $('#totalBasic').text(formatNum(totalBasic));
-            $('#totalNet').text(formatNum(totalNet));
-            $('#totalTaxable').text(formatNum(totalTaxable));
-            $('#totalCGST').text(formatNum(totalCGST));
-            $('#totalSGST').text(formatNum(totalSGST));
-            $('#totalTax').text(formatNum(totalTaxAmt));
             $('#grandTotal').text(formatNum(grandTotal));
 
             // Update summary section
@@ -457,31 +354,13 @@
                 options += '<option value="{{ $item->id }}">{{ $item->name }}</option>';
             @endforeach
             let newRow = `<tr>
-                <td><div class="auto-field hs-display">-</div></td>
-                <td><div class="auto-field brand-display">-</div></td>
                 <td>
                     <select name="items[${rowIdx}][item_id]" class="form-select item-select" required>
                         ${options}
                     </select>
                 </td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][no_of_package]" class="form-control package-input text-end" placeholder="0"></td>
-                <td><input type="text" name="items[${rowIdx}][uom]" class="form-control uom-input text-center" placeholder="UOM"></td>
                 <td><input type="number" step="0.01" name="items[${rowIdx}][quantity]" class="form-control qty-input text-end" required placeholder="0"></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][free_qty]" class="form-control free-input text-end" placeholder="0" value="0"></td>
                 <td><input type="number" step="0.01" name="items[${rowIdx}][rate]" class="form-control rate-input text-end" required placeholder="0.00"></td>
-                <td class="computed-col"><div class="computed-cell basic-display">0.00</div></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][discount_percent]" class="form-control disc-pct-input text-end" placeholder="0" value="0"></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][discount_amount]" class="form-control discount-input text-end" placeholder="0.00" value="0.00"></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][other_discount]" class="form-control other-disc-input text-end" placeholder="0.00" value="0.00"></td>
-                <td class="computed-col"><div class="computed-cell net-display">0.00</div></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][packets]" class="form-control packets-input text-end" required placeholder="0"></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][mrp]" class="form-control mrp-input text-end" required placeholder="0.00"></td>
-                <td class="computed-col"><div class="computed-cell taxable-display">0.00</div></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][cgst_rate]" class="form-control cgst-rate-input text-end" value="20.00"></td>
-                <td class="computed-col"><div class="computed-cell cgst-amt-display">0.00</div></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][sgst_rate]" class="form-control sgst-rate-input text-end" value="20.00"></td>
-                <td class="computed-col"><div class="computed-cell sgst-amt-display">0.00</div></td>
-                <td class="computed-col"><div class="computed-cell tax-display">0.00</div></td>
                 <td class="computed-col"><div class="computed-cell total-cell amount-display">0.00</div></td>
                 <td class="text-center"><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-row"><i class="bx bx-trash"></i></button></td>
             </tr>`;
@@ -496,7 +375,7 @@
             }
         });
 
-        $(document).on('input', '.package-input, .qty-input, .free-input, .rate-input, .disc-pct-input, .discount-input, .other-disc-input, .packets-input, .mrp-input, .cgst-rate-input, .sgst-rate-input', function() {
+        $(document).on('input', '.qty-input, .rate-input', function() {
             let row = $(this).closest('tr');
             calculateRow(row);
         });

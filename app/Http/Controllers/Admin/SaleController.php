@@ -38,15 +38,7 @@ class SaleController extends Controller
             'items.*.no_of_package' => 'nullable|numeric|min:0',
             'items.*.uom' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.free_qty' => 'nullable|numeric|min:0',
             'items.*.rate' => 'required|numeric|min:0',
-            'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
-            'items.*.discount_amount' => 'nullable|numeric|min:0',
-            'items.*.other_discount' => 'nullable|numeric|min:0',
-            'items.*.packets' => 'required|numeric|min:0',
-            'items.*.mrp' => 'required|numeric|min:0',
-            'items.*.cgst_rate' => 'nullable|numeric|min:0',
-            'items.*.sgst_rate' => 'nullable|numeric|min:0',
             'round_off' => 'nullable|numeric',
             'tcs_amount' => 'nullable|numeric|min:0',
             'credit_adj' => 'nullable|numeric|min:0',
@@ -64,10 +56,10 @@ class SaleController extends Controller
                 $discount_percent = $itemData['discount_percent'] ?? 0;
                 $discount_amount = $itemData['discount_amount'] ?? 0;
                 $other_discount = $itemData['other_discount'] ?? 0;
-                $packets = $itemData['packets'];
-                $mrp = $itemData['mrp'];
-                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
-                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+                $packets = $itemData['packets'] ?? 0;
+                $mrp = $itemData['mrp'] ?? 0;
+                $cgst_rate = $itemData['cgst_rate'] ?? 0;
+                $sgst_rate = $itemData['sgst_rate'] ?? 0;
 
                 $basic_value = round($qty * $rate, 2);
 
@@ -77,11 +69,14 @@ class SaleController extends Controller
                 }
 
                 $net_amount = round($basic_value - $discount_amount - $other_discount, 2);
+                
                 $total_value = round($packets * $mrp, 2);
-                $taxable_value = round($total_value / 1.40, 2);
+                $taxable_value = $total_value > 0 ? round($total_value / 1.40, 2) : 0;
                 $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
                 $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
                 $tax_amount = $cgst_amount + $sgst_amount;
+                
+                // If net amount is the only thing we have, just use it
                 $item_amount = round($net_amount + $tax_amount, 2);
 
                 $total_amount += $item_amount;
@@ -112,10 +107,10 @@ class SaleController extends Controller
                 $discount_percent = $itemData['discount_percent'] ?? 0;
                 $discount_amount = $itemData['discount_amount'] ?? 0;
                 $other_discount = $itemData['other_discount'] ?? 0;
-                $packets = $itemData['packets'];
-                $mrp = $itemData['mrp'];
-                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
-                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+                $packets = $itemData['packets'] ?? 0;
+                $mrp = $itemData['mrp'] ?? 0;
+                $cgst_rate = $itemData['cgst_rate'] ?? 0;
+                $sgst_rate = $itemData['sgst_rate'] ?? 0;
 
                 $basic_value = round($qty * $rate, 2);
 
@@ -125,7 +120,7 @@ class SaleController extends Controller
 
                 $net_amount = round($basic_value - $discount_amount - $other_discount, 2);
                 $total_value = round($packets * $mrp, 2);
-                $taxable_value = round($total_value / 1.40, 2);
+                $taxable_value = $total_value > 0 ? round($total_value / 1.40, 2) : 0;
                 $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
                 $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
                 $tax_amount = $cgst_amount + $sgst_amount;
@@ -182,5 +177,11 @@ class SaleController extends Controller
     {
         $sale = Sale::with(['customer', 'items.item'])->findOrFail($id);
         return view('admin.sales.show', compact('sale'));
+    }
+
+    public function invoice($id)
+    {
+        $sale = Sale::with(['customer', 'items.item'])->findOrFail($id);
+        return view('admin.sales.invoice', compact('sale'));
     }
 }

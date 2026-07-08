@@ -30,6 +30,7 @@
                         <td><span class="badge bg-success">{{ $sale->status }}</span></td>
                         <td>
                             <a href="{{ route('admin.sales.show', $sale->id) }}" class="btn btn-sm btn-info">View</a>
+                            <a href="{{ route('admin.sales.invoice', $sale->id) }}" class="btn btn-sm btn-secondary" target="_blank">Invoice</a>
                         </td>
                     </tr>
                     @empty

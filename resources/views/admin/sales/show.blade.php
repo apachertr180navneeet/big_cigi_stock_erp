@@ -3,7 +3,7 @@
 @section('style')
 <style>
     .bill-table {
-        min-width: 2600px;
+        min-width: 100%;
     }
     .bill-table thead th {
         font-size: 0.75rem;
@@ -72,9 +72,14 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Sale Bill: {{ $sale->bill_no }}</h5>
-            <a href="{{ route('admin.sales.index') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="bx bx-arrow-back me-1"></i> Back to List
-            </a>
+            <div>
+                <a href="{{ route('admin.sales.invoice', $sale->id) }}" class="btn btn-sm btn-primary me-2" target="_blank">
+                    <i class="bx bx-printer me-1"></i> Print Invoice
+                </a>
+                <a href="{{ route('admin.sales.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bx bx-arrow-back me-1"></i> Back to List
+                </a>
+            </div>
         </div>
         <div class="card-body">
             <div class="row mb-4">
@@ -92,27 +97,9 @@
                 <table class="table table-bordered align-middle bill-table">
                     <thead>
                         <tr>
-                            <th class="auto-head" style="min-width: 90px;">HSN Code</th>
-                            <th class="auto-head" style="min-width: 90px;">Brand Code</th>
                             <th style="min-width: 250px;">Product Description</th>
-                            <th style="min-width: 100px;">No. of Pkg</th>
-                            <th style="min-width: 80px;">UOM</th>
                             <th style="min-width: 90px;">QTY</th>
-                            <th style="min-width: 80px;">Free</th>
                             <th style="min-width: 110px;">Rate</th>
-                            <th class="computed-head" style="min-width: 120px;">Gross Amt</th>
-                            <th style="min-width: 80px;">Disc%</th>
-                            <th style="min-width: 100px;">Disc Amt</th>
-                            <th style="min-width: 100px;">Other Disc</th>
-                            <th class="computed-head" style="min-width: 120px;">Net Amount</th>
-                            <th style="min-width: 100px;">Retail Packs</th>
-                            <th style="min-width: 100px;">MRP</th>
-                            <th class="computed-head" style="min-width: 125px;">Value for GST</th>
-                            <th style="min-width: 80px;">CGST %</th>
-                            <th class="computed-head" style="min-width: 115px;">CGST Amt</th>
-                            <th style="min-width: 80px;">SGST %</th>
-                            <th class="computed-head" style="min-width: 115px;">SGST Amt</th>
-                            <th class="computed-head" style="min-width: 115px;">Tot. Tax</th>
                             <th class="computed-head" style="min-width: 130px;">Total Amount</th>
                         </tr>
                     </thead>
@@ -149,52 +136,18 @@
                                 $totalTaxAmt += $sItem->tax_amount;
                             @endphp
                             <tr>
-                                <td class="text-center">{{ $sItem->item->hsn ?? '-' }}</td>
-                                <td class="text-center">{{ $sItem->item->brand_code ?? '-' }}</td>
                                 <td>{{ $sItem->item->name ?? 'N/A' }}</td>
-                                <td class="text-end">{{ number_format($sItem->no_of_package, 2) }}</td>
-                                <td class="text-center">{{ $sItem->uom ?? '-' }}</td>
                                 <td class="text-end">{{ number_format($sItem->quantity, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->free_qty, 2) }}</td>
                                 <td class="text-end">{{ number_format($sItem->rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($basicAmt, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->discount_percent, 2) }}%</td>
-                                <td class="text-end">{{ number_format($sItem->discount_amount, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->other_discount, 2) }}</td>
-                                <td class="text-end">{{ number_format($netAmt, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->packets, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->mrp, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->taxable_value, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->cgst_rate, 2) }}%</td>
-                                <td class="text-end">{{ number_format($sItem->cgst_amount, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->sgst_rate, 2) }}%</td>
-                                <td class="text-end">{{ number_format($sItem->sgst_amount, 2) }}</td>
-                                <td class="text-end">{{ number_format($sItem->tax_amount, 2) }}</td>
                                 <td class="text-end fw-bold">{{ number_format($sItem->amount, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr class="table-light">
-                            <td colspan="3" class="text-end">Total:</td>
-                            <td class="text-end">{{ number_format($totalPackages, 2) }}</td>
-                            <td></td>
+                            <td class="text-end">Total:</td>
                             <td class="text-end">{{ number_format($totalQty, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalFree, 2) }}</td>
                             <td></td>
-                            <td class="text-end">{{ number_format($totalBasic, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalDiscount, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalOtherDisc, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalNet, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalPackets, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalTaxable, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalCGST, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalSGST, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalTaxAmt, 2) }}</td>
                             <td class="text-end">{{ number_format($sale->total_amount, 2) }}</td>
                         </tr>
                     </tfoot>
