@@ -53,7 +53,14 @@
                     </div>
 
                     <h6 class="mb-3 mt-4">Other Details</h6>
-                    <div class="col-md-12 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label" for="sale_price">Sale Price</label>
+                        <input type="number" step="0.01" class="form-control @error('sale_price') is-invalid @enderror" id="sale_price" name="sale_price" value="{{ old('sale_price') }}" />
+                        @error('sale_price')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-8 mb-3">
                         <label class="form-label" for="description">Description</label>
                         <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description">{{ old('description') }}</textarea>
                         @error('description')

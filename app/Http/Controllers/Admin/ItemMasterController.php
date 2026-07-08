@@ -30,6 +30,7 @@ class ItemMasterController extends Controller
             'description' => 'nullable|string',
             'hsn' => 'nullable|string|max:255',
             'brand_code' => 'nullable|string|max:255',
+            'sale_price' => 'nullable|numeric|min:0',
             'pack_size' => 'nullable|integer|min:1',
         ]);
 
@@ -50,6 +51,7 @@ class ItemMasterController extends Controller
             'description' => 'nullable|string',
             'hsn' => 'nullable|string|max:255',
             'brand_code' => 'nullable|string|max:255',
+            'sale_price' => 'nullable|numeric|min:0',
             'pack_size' => 'nullable|integer|min:1',
         ]);
 

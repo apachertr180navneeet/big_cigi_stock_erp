@@ -17,6 +17,7 @@ class ItemMaster extends Model
         'brand_code',
         'current_stock',
         'opening_stock',
+        'sale_price',
         'pack_size',
         'status',
     ];

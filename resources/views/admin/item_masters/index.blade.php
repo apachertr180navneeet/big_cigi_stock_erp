@@ -19,6 +19,7 @@
                         <th>Name</th>
                         <th>HSN</th>
                         <th>Brand Code</th>
+                        <th>Sale Price</th>
                         <th>Pack Size</th>
                         <th>Stock (Units)</th>
                         <th>Stock (Packs)</th>
@@ -32,6 +33,7 @@
                         <td>{{ $item->name }}</td>
                         <td>{{ $item->hsn }}</td>
                         <td>{{ $item->brand_code }}</td>
+                        <td>{{ $item->sale_price }}</td>
                         <td>{{ $item->pack_size }}</td>
                         <td>{{ $item->current_stock }}</td>
                         <td>{{ intval($item->current_stock / $item->pack_size) }}</td>

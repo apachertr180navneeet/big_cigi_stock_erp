@@ -290,8 +290,7 @@
         let itemData = {};
         @foreach($items as $item)
             itemData[{{ $item->id }}] = {
-                hsn: '{{ $item->hsn ?? "" }}',
-                brand_code: '{{ $item->brand_code ?? "" }}'
+                sale_price: '{{ $item->sale_price ?? 0 }}'
             };
         @endforeach
 
@@ -336,16 +335,15 @@
             $('#grandTotalDisplay').text(formatNum(netPayable));
         }
 
-        // Auto-populate HS Code & Brand Code when item is selected
+        // Auto-populate Rate when item is selected
         function populateItemInfo(row) {
             let itemId = row.find('.item-select').val();
             if (itemId && itemData[itemId]) {
-                row.find('.hs-display').text(itemData[itemId].hsn || '-');
-                row.find('.brand-display').text(itemData[itemId].brand_code || '-');
+                row.find('.rate-input').val(itemData[itemId].sale_price);
             } else {
-                row.find('.hs-display').text('-');
-                row.find('.brand-display').text('-');
+                row.find('.rate-input').val('0.00');
             }
+            calculateRow(row);
         }
 
         $('#addRow').click(function() {
