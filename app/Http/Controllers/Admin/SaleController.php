@@ -41,9 +41,6 @@ class SaleController extends Controller
             'items.*.rate' => 'required|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
             'cess_amount' => 'nullable|numeric|min:0',
-            'round_off' => 'nullable|numeric',
-            'tcs_amount' => 'nullable|numeric|min:0',
-            'credit_adj' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -86,19 +83,15 @@ class SaleController extends Controller
 
             $discount_amount = $request->discount_amount ?? 0;
             $cess_amount = $request->cess_amount ?? 0;
-            $round_off = $request->round_off ?? 0;
-            $tcs_amount = $request->tcs_amount ?? 0;
-            $credit_adj = $request->credit_adj ?? 0;
-            $net_payable = round($total_amount - $discount_amount + $cess_amount + $round_off + $tcs_amount - $credit_adj, 2);
+            $net_payable = round($total_amount - $discount_amount + $cess_amount, 2);
 
             $sale = Sale::create([
                 'customer_id' => $request->customer_id,
                 'bill_no' => $request->bill_no,
                 'bill_date' => $request->bill_date,
                 'total_amount' => $total_amount,
-                'round_off' => $round_off,
-                'tcs_amount' => $tcs_amount,
-                'credit_adj' => $credit_adj,
+                'discount_amount' => $discount_amount,
+                'cess_amount' => $cess_amount,
                 'net_payable' => $net_payable,
                 'status' => 'completed',
             ]);

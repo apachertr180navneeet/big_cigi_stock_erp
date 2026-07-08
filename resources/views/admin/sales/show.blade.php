@@ -173,18 +173,6 @@
                             <span class="label">40% Cess</span>
                             <span class="value">₹ {{ number_format($sale->cess_amount, 2) }}</span>
                         </div>
-                        <div class="summary-row">
-                            <span class="label">TCS u/s 206C(1H)</span>
-                            <span class="value">₹ {{ number_format($sale->tcs_amount, 2) }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="label">Credit Adj</span>
-                            <span class="value">₹ {{ number_format($sale->credit_adj, 2) }}</span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="label">Round Off</span>
-                            <span class="value">₹ {{ number_format($sale->round_off, 2) }}</span>
-                        </div>
                         <div class="summary-row total-row">
                             <span>Net Amt Payable</span>
                             <span>₹ {{ number_format($sale->net_payable, 2) }}</span>

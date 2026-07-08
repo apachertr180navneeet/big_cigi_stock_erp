@@ -17,9 +17,6 @@ class Sale extends Model
         'total_amount',
         'discount_amount',
         'cess_amount',
-        'round_off',
-        'tcs_amount',
-        'credit_adj',
         'net_payable',
         'status',
     ];
