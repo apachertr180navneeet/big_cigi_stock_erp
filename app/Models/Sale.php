@@ -15,6 +15,8 @@ class Sale extends Model
         'bill_no',
         'bill_date',
         'total_amount',
+        'discount_amount',
+        'cess_amount',
         'round_off',
         'tcs_amount',
         'credit_adj',

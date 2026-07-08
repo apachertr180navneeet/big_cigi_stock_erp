@@ -236,6 +236,18 @@
                                 <span class="value" id="summarySubtotal">₹ 0.00</span>
                             </div>
                             <div class="summary-row">
+                                <span class="label">Discount</span>
+                                <div style="width: 140px;">
+                                    <input type="number" step="0.01" name="discount_amount" class="form-control form-control-sm text-end" id="discountInput" value="0.00">
+                                </div>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">40% Cess</span>
+                                <div style="width: 140px;">
+                                    <input type="number" step="0.01" name="cess_amount" class="form-control form-control-sm text-end" id="cessInput" value="0.00" readonly>
+                                </div>
+                            </div>
+                            <div class="summary-row">
                                 <span class="label">TCS u/s 206C(1H)</span>
                                 <div style="width: 140px;">
                                     <input type="number" step="0.01" name="tcs_amount" class="form-control form-control-sm text-end" id="tcsInput" value="0.00">
@@ -325,11 +337,19 @@
         }
 
         function calculateNetPayable(subtotal) {
+            let discount = parseFloat($('#discountInput').val()) || 0;
+            
+            // Calculate 40% Cess on (Subtotal - Discount)
+            let taxableForCess = subtotal - discount;
+            let cess = taxableForCess > 0 ? (taxableForCess * 0.40) : 0;
+            cess = Math.round(cess * 100) / 100;
+            $('#cessInput').val(cess.toFixed(2));
+
             let tcs = parseFloat($('#tcsInput').val()) || 0;
             let creditAdj = parseFloat($('#creditAdjInput').val()) || 0;
             let roundOff = parseFloat($('#roundOffInput').val()) || 0;
 
-            let netPayable = Math.round((subtotal + roundOff + tcs - creditAdj) * 100) / 100;
+            let netPayable = Math.round((subtotal - discount + cess + roundOff + tcs - creditAdj) * 100) / 100;
 
             $('#netPayableDisplay').text('₹ ' + formatNum(netPayable));
             $('#grandTotalDisplay').text(formatNum(netPayable));
@@ -379,7 +399,7 @@
         });
 
         // Recalculate net payable when bill-level inputs change
-        $(document).on('input', '#tcsInput, #creditAdjInput, #roundOffInput', function() {
+        $(document).on('input', '#tcsInput, #creditAdjInput, #roundOffInput, #discountInput', function() {
             let subtotal = 0;
             $('.amount-display').each(function() { subtotal += ($(this).data('val') || 0); });
             calculateNetPayable(subtotal);
