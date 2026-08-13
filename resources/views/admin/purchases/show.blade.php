@@ -3,7 +3,7 @@
 @section('style')
 <style>
     .bill-table {
-        min-width: 1400px;
+        min-width: 700px;
     }
     .bill-table thead th {
         font-size: 0.75rem;
@@ -122,11 +122,25 @@
         </div>
         <div class="card-body">
             <div class="row mb-4">
-                <div class="col-md-6">
-                    <p class="mb-1"><strong>Vendor:</strong> {{ $purchase->vendor->name ?? 'N/A' }}</p>
-                    <p class="mb-0"><strong>Bill Date:</strong> {{ date('d-M-Y', strtotime($purchase->bill_date)) }}</p>
+                <div class="col-md-4">
+                    <p class="mb-1"><strong>Supplier:</strong> {{ $purchase->vendor->name ?? 'N/A' }}</p>
+                    <p class="mb-1"><strong>Bill Date:</strong> {{ date('d-M-Y', strtotime($purchase->bill_date)) }}</p>
+                    @if($purchase->supplier_invoice_no)
+                        <p class="mb-1"><strong>Supplier Inv No:</strong> {{ $purchase->supplier_invoice_no }}</p>
+                    @endif
                 </div>
-                <div class="col-md-6 text-end">
+                <div class="col-md-4">
+                    @if($purchase->eway_bill_no)
+                        <p class="mb-1"><strong>e-Way Bill:</strong> {{ $purchase->eway_bill_no }}</p>
+                    @endif
+                    @if($purchase->supplier_invoice_date)
+                        <p class="mb-1"><strong>Supplier Inv Date:</strong> {{ date('d-M-Y', strtotime($purchase->supplier_invoice_date)) }}</p>
+                    @endif
+                    @if($purchase->other_references)
+                        <p class="mb-1"><strong>Other Ref:</strong> {{ $purchase->other_references }}</p>
+                    @endif
+                </div>
+                <div class="col-md-4 text-end">
                     <p class="mb-0"><strong>Total Amount:</strong> <span class="fs-4 fw-bold text-primary">₹ {{ number_format($purchase->total_amount, 2) }}</span></p>
                 </div>
             </div>
@@ -135,98 +149,85 @@
                 <table class="table table-bordered align-middle bill-table">
                     <thead>
                         <tr>
-                            <th class="auto-head" style="min-width: 90px;">HSN Code</th>
-                            <th class="auto-head" style="min-width: 90px;">Brand Code</th>
-                            <th style="min-width: 220px;">Product Description</th>
-                            <th style="min-width: 100px;">No. of Package</th>
-                            <th style="min-width: 80px;">UOM</th>
-                            <th style="min-width: 90px;">QTY</th>
-                            <th style="min-width: 100px;">Rate</th>
-                            <th class="computed-head" style="min-width: 110px;">Amount</th>
-                            <th style="min-width: 90px;">Discount Amt</th>
-                            <th class="computed-head" style="min-width: 110px;">Net Amount</th>
-                            <th style="min-width: 90px;">Retail Packs</th>
-                            <th style="min-width: 90px;">MRP</th>
-                            <th class="computed-head" style="min-width: 110px;">Value for GST</th>
-                            <th style="min-width: 70px;">CGST %</th>
-                            <th class="computed-head" style="min-width: 100px;">CGST Amt</th>
-                            <th style="min-width: 70px;">SGST %</th>
-                            <th class="computed-head" style="min-width: 100px;">SGST Amt</th>
-                            <th class="computed-head" style="min-width: 120px;">Total Amount</th>
+                            <th style="width:5%;">Sl No.</th>
+                            <th style="width:35%; text-align:left;">Description of Goods</th>
+                            <th style="width:13%; text-align:right;">Quantity</th>
+                            <th style="width:12%; text-align:right;">Rate</th>
+                            <th style="width:8%;">per</th>
+                            <th style="width:10%; text-align:right;">Disc. %</th>
+                            <th style="width:15%; text-align:right;">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         @php
-                            $totalPackages = 0;
                             $totalQty = 0;
-                            $totalBasic = 0;
+                            $subtotal = 0;
                             $totalDiscount = 0;
-                            $totalNet = 0;
-                            $totalPackets = 0;
-                            $totalTV = 0;
-                            $totalTaxable = 0;
                             $totalCGST = 0;
                             $totalSGST = 0;
                         @endphp
-                        @foreach($purchase->items as $pItem)
+                        @foreach($purchase->items as $idx => $pItem)
                             @php
                                 $basicAmt = $pItem->quantity * $pItem->rate;
-                                $netAmt = $basicAmt - $pItem->discount_amount;
-                                $tv = $pItem->packets * $pItem->mrp;
-                                $totalPackages += $pItem->no_of_package;
+                                $discAmt = $pItem->discount_amount ?? 0;
+                                $lineAmt = $basicAmt - $discAmt;
                                 $totalQty += $pItem->quantity;
-                                $totalBasic += $basicAmt;
-                                $totalDiscount += $pItem->discount_amount;
-                                $totalNet += $netAmt;
-                                $totalPackets += $pItem->packets;
-                                $totalTV += $tv;
-                                $totalTaxable += $pItem->taxable_value;
+                                $subtotal += $basicAmt;
+                                $totalDiscount += $discAmt;
                                 $totalCGST += $pItem->cgst_amount;
                                 $totalSGST += $pItem->sgst_amount;
                             @endphp
                             <tr>
-                                <td class="text-center">{{ $pItem->item->hsn ?? '-' }}</td>
-                                <td class="text-center">{{ $pItem->item->brand_code ?? '-' }}</td>
-                                <td>{{ $pItem->item->name ?? 'N/A' }}</td>
-                                <td class="text-end">{{ number_format($pItem->no_of_package, 2) }}</td>
-                                <td class="text-center">{{ $pItem->uom ?? 'PCS' }}</td>
+                                <td class="text-center">{{ $idx + 1 }}</td>
+                                <td><strong>{{ $pItem->item->name ?? 'N/A' }}</strong></td>
                                 <td class="text-end">{{ number_format($pItem->quantity, 2) }}</td>
                                 <td class="text-end">{{ number_format($pItem->rate, 2) }}</td>
-                                <td class="text-end">{{ number_format($basicAmt, 2) }}</td>
-                                <td class="text-end">{{ number_format($pItem->discount_amount, 2) }}</td>
-                                <td class="text-end">{{ number_format($netAmt, 2) }}</td>
-                                <td class="text-end">{{ number_format($pItem->packets, 2) }}</td>
-                                <td class="text-end">{{ number_format($pItem->mrp, 2) }}</td>
-                                <td class="text-end">{{ number_format($pItem->taxable_value, 2) }}</td>
-                                <td class="text-end">{{ number_format($pItem->cgst_rate, 2) }}%</td>
-                                <td class="text-end">{{ number_format($pItem->cgst_amount, 2) }}</td>
-                                <td class="text-end">{{ number_format($pItem->sgst_rate, 2) }}%</td>
-                                <td class="text-end">{{ number_format($pItem->sgst_amount, 2) }}</td>
-                                <td class="text-end fw-bold">{{ number_format($pItem->amount, 2) }}</td>
+                                <td class="text-center">{{ $pItem->uom ?? 'PCS' }}</td>
+                                <td class="text-end">{{ $discAmt > 0 ? number_format(($discAmt / ($basicAmt ?: 1)) * 100, 2) . '%' : '-' }}</td>
+                                <td class="text-end">{{ number_format($lineAmt, 2) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
                         <tr class="table-light">
-                            <td colspan="3" class="text-end">Total:</td>
-                            <td class="text-end">{{ number_format($totalPackages, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalQty, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalBasic, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalDiscount, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalNet, 2) }}</td>
-                            <td class="text-end">{{ number_format($totalPackets, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalTaxable, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalCGST, 2) }}</td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totalSGST, 2) }}</td>
-                            <td class="text-end">{{ number_format($purchase->total_amount, 2) }}</td>
+                            <td colspan="2" class="text-end"><strong>Total</strong></td>
+                            <td class="text-end"><strong>{{ number_format($totalQty, 2) }}</strong></td>
+                            <td colspan="3"></td>
+                            <td class="text-end"><strong>{{ number_format($subtotal, 2) }}</strong></td>
                         </tr>
                     </tfoot>
                 </table>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="row mt-3">
+                <div class="col-md-7"></div>
+                <div class="col-md-5">
+                    <table class="table table-bordered mb-0" style="font-size:0.9rem;">
+                        <tr>
+                            <td class="text-end fw-semibold bg-light">Subtotal</td>
+                            <td class="text-end" style="min-width:140px;">{{ number_format($subtotal, 2) }}</td>
+                        </tr>
+                        @if($totalDiscount > 0)
+                        <tr>
+                            <td class="text-end fw-semibold bg-light text-danger"><em>Less: Discount Allowed</em></td>
+                            <td class="text-end text-danger">-{{ number_format($totalDiscount, 2) }}</td>
+                        </tr>
+                        @endif
+                        <tr>
+                            <td class="text-end fw-semibold bg-light">SGST</td>
+                            <td class="text-end">{{ number_format($totalSGST, 2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-end fw-semibold bg-light">CGST</td>
+                            <td class="text-end">{{ number_format($totalCGST, 2) }}</td>
+                        </tr>
+                        <tr style="background:#eef2ff;">
+                            <td class="text-end fw-bold">₹ Grand Total</td>
+                            <td class="text-end fw-bold fs-5">{{ number_format($purchase->total_amount, 2) }}</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

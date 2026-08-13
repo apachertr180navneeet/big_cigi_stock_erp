@@ -28,10 +28,10 @@
     }
     #itemsTable .form-control,
     #itemsTable .form-select {
-        font-size: 0.85rem;
-        padding: 0.35rem 0.45rem;
-        min-height: 34px;
-        border-radius: 3px;
+        font-size: 0.9rem;
+        padding: 0.5rem 0.6rem;
+        min-height: 42px;
+        border-radius: 4px;
     }
     #itemsTable .item-select {
         min-width: 260px !important;
@@ -435,8 +435,22 @@
 
         $(document).on('click', '.remove-row', function() {
             if ($('#itemsTable tbody tr').length > 1) {
-                $(this).closest('tr').remove();
-                calculateGrandTotal();
+                let row = $(this).closest('tr');
+                Swal.fire({
+                    title: 'Remove Item?',
+                    text: 'Are you sure you want to remove this item row?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ff3e1d',
+                    cancelButtonColor: '#8592a3',
+                    confirmButtonText: 'Yes, remove it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        row.remove();
+                        calculateGrandTotal();
+                        Toast.fire({ icon: 'success', title: 'Item row removed' });
+                    }
+                });
             }
         });
 
@@ -481,15 +495,20 @@
                             $('#itemsTable tbody tr').each(function() { calculateRow($(this)); });
                             $('#importExcelModal').modal('hide');
                             $('#excelImportForm')[0].reset();
-                            alert(res.message);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Import Successful!',
+                                text: res.message,
+                                confirmButtonColor: '#696cff'
+                            });
                         }
                     } else {
-                        alertBox.removeClass('d-none').addClass('alert-danger').text(res.message || 'Error parsing Excel.');
+                        Swal.fire({ icon: 'error', title: 'Import Failed', text: res.message || 'Error parsing Excel.', confirmButtonColor: '#696cff' });
                     }
                 },
                 error: function(xhr) {
                     btn.prop('disabled', false).html('<i class="bx bx-upload me-1"></i> Upload & Import');
-                    alertBox.removeClass('d-none').addClass('alert-danger').text(xhr.responseJSON?.message || 'Import failed.');
+                    Swal.fire({ icon: 'error', title: 'Import Error', text: xhr.responseJSON?.message || 'Import failed.', confirmButtonColor: '#696cff' });
                 }
             });
         });
