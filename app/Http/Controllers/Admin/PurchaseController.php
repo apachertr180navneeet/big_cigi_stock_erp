@@ -19,7 +19,7 @@ class PurchaseController extends Controller
 {
     public function index()
     {
-        $purchases = Purchase::with('vendor')->orderBy('id', 'desc')->get();
+        $purchases = Purchase::with('vendor')->orderBy('id', 'desc')->paginate(10);
         return view('admin.purchases.index', compact('purchases'));
     }
 
