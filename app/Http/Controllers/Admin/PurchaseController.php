@@ -38,47 +38,35 @@ class PurchaseController extends Controller
             'bill_date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required',
-            'items.*.no_of_package' => 'nullable|numeric|min:0',
-            'items.*.uom' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.rate' => 'required|numeric|min:0',
-            'items.*.discount_amount' => 'nullable|numeric|min:0',
-            'items.*.packets' => 'nullable|numeric|min:0',
-            'items.*.mrp' => 'nullable|numeric|min:0',
-            'items.*.cgst_rate' => 'nullable|numeric|min:0',
-            'items.*.sgst_rate' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $total_amount = 0;
-            $cgst_total_sum = 0;
-            $sgst_total_sum = 0;
-            $discount_total_sum = 0;
+            $subtotal = 0;
+            $total_qty = 0;
 
             foreach ($request->items as $itemData) {
-                $qty = $itemData['quantity'];
-                $rate = $itemData['rate'];
-                $discount = $itemData['discount_amount'] ?? 0;
-                $packets = !empty($itemData['packets']) ? $itemData['packets'] : $qty;
-                $mrp = !empty($itemData['mrp']) ? $itemData['mrp'] : $rate;
-                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
-                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+                $qty = floatval($itemData['quantity']);
+                $rate = floatval($itemData['rate']);
+                $line_amount = !empty($itemData['amount']) && floatval($itemData['amount']) > 0 
+                    ? floatval($itemData['amount']) 
+                    : round($qty * $rate, 2);
 
-                $basic_value = round($qty * $rate, 2);
-                $net_amount = round($basic_value - $discount, 2);
-                $total_value = round($packets * $mrp, 2);
-                $taxable_value = round($total_value / 1.40, 2);
-                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
-                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
-                $tax_amount = $cgst_amount + $sgst_amount;
-                $item_amount = $net_amount + $tax_amount;
+                $subtotal += $line_amount;
+                $total_qty += $qty;
+            }
 
-                $total_amount += $item_amount;
-                $cgst_total_sum += $cgst_amount;
-                $sgst_total_sum += $sgst_amount;
-                $discount_total_sum += $discount;
+            $discount_allowed = floatval($request->discount_allowed ?? 0);
+            $net_taxable = max(0, $subtotal - $discount_allowed);
+            $cgst_total = floatval($request->cgst_total ?? 0);
+            $sgst_total = floatval($request->sgst_total ?? 0);
+
+            $total_amount = floatval($request->total_amount ?? ($net_taxable + $cgst_total + $sgst_total));
+            if ($total_amount <= 0) {
+                $total_amount = round($net_taxable + $cgst_total + $sgst_total, 2);
             }
 
             $purchaseData = [
@@ -86,7 +74,7 @@ class PurchaseController extends Controller
                 'bill_no' => $request->bill_no,
                 'bill_date' => $request->bill_date,
                 'total_amount' => $total_amount,
-                'status' => 'completed',
+                'status' => $request->status ?? 'completed',
             ];
 
             if (Schema::hasColumn('purchases', 'eway_bill_no')) {
@@ -94,30 +82,26 @@ class PurchaseController extends Controller
                 $purchaseData['supplier_invoice_no'] = $request->supplier_invoice_no ?? null;
                 $purchaseData['supplier_invoice_date'] = $request->supplier_invoice_date ?? null;
                 $purchaseData['other_references'] = $request->other_references ?? null;
-                $purchaseData['discount_allowed'] = $discount_total_sum;
-                $purchaseData['cgst_total'] = $cgst_total_sum;
-                $purchaseData['sgst_total'] = $sgst_total_sum;
+                $purchaseData['discount_allowed'] = $discount_allowed;
+                $purchaseData['cgst_total'] = $cgst_total;
+                $purchaseData['sgst_total'] = $sgst_total;
             }
 
             $purchase = Purchase::create($purchaseData);
 
             foreach ($request->items as $itemData) {
-                $qty = $itemData['quantity'];
-                $rate = $itemData['rate'];
-                $discount = $itemData['discount_amount'] ?? 0;
-                $packets = !empty($itemData['packets']) ? $itemData['packets'] : $qty;
-                $mrp = !empty($itemData['mrp']) ? $itemData['mrp'] : $rate;
-                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
-                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+                $qty = floatval($itemData['quantity']);
+                $rate = floatval($itemData['rate']);
+                $line_amount = !empty($itemData['amount']) && floatval($itemData['amount']) > 0 
+                    ? floatval($itemData['amount']) 
+                    : round($qty * $rate, 2);
 
-                $basic_value = round($qty * $rate, 2);
-                $net_amount = round($basic_value - $discount, 2);
-                $total_value = round($packets * $mrp, 2);
-                $taxable_value = round($total_value / 1.40, 2);
-                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
-                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
-                $tax_amount = $cgst_amount + $sgst_amount;
-                $amount = $net_amount + $tax_amount;
+                $prop_disc = ($subtotal > 0 && $discount_allowed > 0) ? round(($line_amount / $subtotal) * $discount_allowed, 2) : 0;
+                $item_taxable = max(0, $line_amount - $prop_disc);
+                $item_cgst = ($net_taxable > 0 && $cgst_total > 0) ? round(($item_taxable / $net_taxable) * $cgst_total, 2) : 0;
+                $item_sgst = ($net_taxable > 0 && $sgst_total > 0) ? round(($item_taxable / $net_taxable) * $sgst_total, 2) : 0;
+                $item_tax = $item_cgst + $item_sgst;
+                $final_item_amount = $item_taxable + $item_tax;
                 
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
@@ -126,16 +110,16 @@ class PurchaseController extends Controller
                     'uom' => $itemData['uom'] ?? 'PCS',
                     'quantity' => $qty,
                     'rate' => $rate,
-                    'discount_amount' => $discount,
-                    'packets' => $packets,
-                    'mrp' => $mrp,
-                    'taxable_value' => $taxable_value,
-                    'cgst_rate' => $cgst_rate,
-                    'cgst_amount' => $cgst_amount,
-                    'sgst_rate' => $sgst_rate,
-                    'sgst_amount' => $sgst_amount,
-                    'tax_amount' => $tax_amount,
-                    'amount' => $amount,
+                    'discount_amount' => $prop_disc,
+                    'packets' => !empty($itemData['packets']) ? $itemData['packets'] : $qty,
+                    'mrp' => !empty($itemData['mrp']) ? $itemData['mrp'] : $rate,
+                    'taxable_value' => $item_taxable,
+                    'cgst_rate' => ($item_taxable > 0 && $item_cgst > 0) ? round(($item_cgst / $item_taxable) * 100, 2) : 0,
+                    'cgst_amount' => $item_cgst,
+                    'sgst_rate' => ($item_taxable > 0 && $item_sgst > 0) ? round(($item_sgst / $item_taxable) * 100, 2) : 0,
+                    'sgst_amount' => $item_sgst,
+                    'tax_amount' => $item_tax,
+                    'amount' => $final_item_amount,
                 ]);
 
                 // Update Stock
@@ -186,15 +170,8 @@ class PurchaseController extends Controller
             'bill_date' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required',
-            'items.*.no_of_package' => 'nullable|numeric|min:0',
-            'items.*.uom' => 'nullable|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.rate' => 'required|numeric|min:0',
-            'items.*.discount_amount' => 'nullable|numeric|min:0',
-            'items.*.packets' => 'nullable|numeric|min:0',
-            'items.*.mrp' => 'nullable|numeric|min:0',
-            'items.*.cgst_rate' => 'nullable|numeric|min:0',
-            'items.*.sgst_rate' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -212,33 +189,28 @@ class PurchaseController extends Controller
             StockLedger::where('transaction_type', 'purchase')->where('transaction_id', $purchase->id)->delete();
             $purchase->items()->delete();
 
-            $total_amount = 0;
-            $cgst_total_sum = 0;
-            $sgst_total_sum = 0;
-            $discount_total_sum = 0;
+            $subtotal = 0;
+            $total_qty = 0;
 
             foreach ($request->items as $itemData) {
-                $qty = $itemData['quantity'];
-                $rate = $itemData['rate'];
-                $discount = $itemData['discount_amount'] ?? 0;
-                $packets = !empty($itemData['packets']) ? $itemData['packets'] : $qty;
-                $mrp = !empty($itemData['mrp']) ? $itemData['mrp'] : $rate;
-                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
-                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+                $qty = floatval($itemData['quantity']);
+                $rate = floatval($itemData['rate']);
+                $line_amount = !empty($itemData['amount']) && floatval($itemData['amount']) > 0 
+                    ? floatval($itemData['amount']) 
+                    : round($qty * $rate, 2);
 
-                $basic_value = round($qty * $rate, 2);
-                $net_amount = round($basic_value - $discount, 2);
-                $total_value = round($packets * $mrp, 2);
-                $taxable_value = round($total_value / 1.40, 2);
-                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
-                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
-                $tax_amount = $cgst_amount + $sgst_amount;
-                $item_amount = $net_amount + $tax_amount;
+                $subtotal += $line_amount;
+                $total_qty += $qty;
+            }
 
-                $total_amount += $item_amount;
-                $cgst_total_sum += $cgst_amount;
-                $sgst_total_sum += $sgst_amount;
-                $discount_total_sum += $discount;
+            $discount_allowed = floatval($request->discount_allowed ?? 0);
+            $net_taxable = max(0, $subtotal - $discount_allowed);
+            $cgst_total = floatval($request->cgst_total ?? 0);
+            $sgst_total = floatval($request->sgst_total ?? 0);
+
+            $total_amount = floatval($request->total_amount ?? ($net_taxable + $cgst_total + $sgst_total));
+            if ($total_amount <= 0) {
+                $total_amount = round($net_taxable + $cgst_total + $sgst_total, 2);
             }
 
             $updateData = [
@@ -254,30 +226,26 @@ class PurchaseController extends Controller
                 $updateData['supplier_invoice_no'] = $request->supplier_invoice_no ?? null;
                 $updateData['supplier_invoice_date'] = $request->supplier_invoice_date ?? null;
                 $updateData['other_references'] = $request->other_references ?? null;
-                $updateData['discount_allowed'] = $discount_total_sum;
-                $updateData['cgst_total'] = $cgst_total_sum;
-                $updateData['sgst_total'] = $sgst_total_sum;
+                $updateData['discount_allowed'] = $discount_allowed;
+                $updateData['cgst_total'] = $cgst_total;
+                $updateData['sgst_total'] = $sgst_total;
             }
 
             $purchase->update($updateData);
 
             foreach ($request->items as $itemData) {
-                $qty = $itemData['quantity'];
-                $rate = $itemData['rate'];
-                $discount = $itemData['discount_amount'] ?? 0;
-                $packets = !empty($itemData['packets']) ? $itemData['packets'] : $qty;
-                $mrp = !empty($itemData['mrp']) ? $itemData['mrp'] : $rate;
-                $cgst_rate = $itemData['cgst_rate'] ?? 20.00;
-                $sgst_rate = $itemData['sgst_rate'] ?? 20.00;
+                $qty = floatval($itemData['quantity']);
+                $rate = floatval($itemData['rate']);
+                $line_amount = !empty($itemData['amount']) && floatval($itemData['amount']) > 0 
+                    ? floatval($itemData['amount']) 
+                    : round($qty * $rate, 2);
 
-                $basic_value = round($qty * $rate, 2);
-                $net_amount = round($basic_value - $discount, 2);
-                $total_value = round($packets * $mrp, 2);
-                $taxable_value = round($total_value / 1.40, 2);
-                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
-                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
-                $tax_amount = $cgst_amount + $sgst_amount;
-                $amount = $net_amount + $tax_amount;
+                $prop_disc = ($subtotal > 0 && $discount_allowed > 0) ? round(($line_amount / $subtotal) * $discount_allowed, 2) : 0;
+                $item_taxable = max(0, $line_amount - $prop_disc);
+                $item_cgst = ($net_taxable > 0 && $cgst_total > 0) ? round(($item_taxable / $net_taxable) * $cgst_total, 2) : 0;
+                $item_sgst = ($net_taxable > 0 && $sgst_total > 0) ? round(($item_taxable / $net_taxable) * $sgst_total, 2) : 0;
+                $item_tax = $item_cgst + $item_sgst;
+                $final_amount = $item_taxable + $item_tax;
 
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
@@ -286,16 +254,16 @@ class PurchaseController extends Controller
                     'uom' => $itemData['uom'] ?? 'PCS',
                     'quantity' => $qty,
                     'rate' => $rate,
-                    'discount_amount' => $discount,
-                    'packets' => $packets,
-                    'mrp' => $mrp,
-                    'taxable_value' => $taxable_value,
-                    'cgst_rate' => $cgst_rate,
-                    'cgst_amount' => $cgst_amount,
-                    'sgst_rate' => $sgst_rate,
-                    'sgst_amount' => $sgst_amount,
-                    'tax_amount' => $tax_amount,
-                    'amount' => $amount,
+                    'discount_amount' => $prop_disc,
+                    'packets' => !empty($itemData['packets']) ? $itemData['packets'] : $qty,
+                    'mrp' => !empty($itemData['mrp']) ? $itemData['mrp'] : $rate,
+                    'taxable_value' => $item_taxable,
+                    'cgst_rate' => ($item_taxable > 0 && $item_cgst > 0) ? round(($item_cgst / $item_taxable) * 100, 2) : 0,
+                    'cgst_amount' => $item_cgst,
+                    'sgst_rate' => ($item_taxable > 0 && $item_sgst > 0) ? round(($item_sgst / $item_taxable) * 100, 2) : 0,
+                    'sgst_amount' => $item_sgst,
+                    'tax_amount' => $item_tax,
+                    'amount' => $final_amount,
                 ]);
 
                 // Update Stock
@@ -543,33 +511,34 @@ class PurchaseController extends Controller
             if ($colMap['disc'] === -1) $colMap['disc'] = 5;
             if ($colMap['amount'] === -1) $colMap['amount'] = 6;
 
-            $parsedItems = [];
-            $globalDiscountAmount = 0;
-            $detectedSgst = null;
-            $detectedCgst = null;
-
             // 3. Parse table rows & summary footer rows
+            $detectedSubtotal = 0;
+            $detectedDiscount = 0;
+            $detectedSgst = 0;
+            $detectedCgst = 0;
+            $detectedTotal = 0;
+
             for ($i = $startIdx; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 $rowStr = implode(' ', array_map('strval', $row));
 
-                // Check for summary/footer rows (Less Discount, SGST, CGST)
-                if (preg_match('/(less:\s*discount|discount\s*allowed|sgst|cgst|igst|amount\s*chargeable|authorised\s*signatory)/i', $rowStr)) {
+                // Check for summary/footer rows (Less Discount, SGST, CGST, Total)
+                if (preg_match('/(less:\s*discount|discount\s*allowed|sgst|cgst|igst|amount\s*chargeable|authorised\s*signatory|\btotal\b)/i', $rowStr)) {
                     // Extract global discount if present
                     if (preg_match('/(?:less:\s*)?discount(?:\s*allowed)?/i', $rowStr)) {
                         foreach ($row as $cell) {
                             $cVal = trim((string)$cell);
                             if (preg_match('/\-?\s*([\d\.\,]+)/', $cVal, $mVal)) {
                                 $num = floatval(str_replace(',', '', $mVal[1]));
-                                if ($num > 0) {
-                                    $globalDiscountAmount = $num;
+                                if ($num > 0 && $num < 10000000) {
+                                    $detectedDiscount = $num;
                                     break;
                                 }
                             }
                         }
                     }
-                    // Extract SGST / CGST amounts if present
-                    if (preg_match('/sgst/i', $rowStr)) {
+                    // Extract SGST amount if present
+                    if (preg_match('/\bsgst\b/i', $rowStr)) {
                         foreach ($row as $cell) {
                             $cVal = trim((string)$cell);
                             if (preg_match('/[\d\.\,]+/', $cVal, $mVal)) {
@@ -578,12 +547,23 @@ class PurchaseController extends Controller
                             }
                         }
                     }
-                    if (preg_match('/cgst/i', $rowStr)) {
+                    // Extract CGST amount if present
+                    if (preg_match('/\bcgst\b/i', $rowStr)) {
                         foreach ($row as $cell) {
                             $cVal = trim((string)$cell);
                             if (preg_match('/[\d\.\,]+/', $cVal, $mVal)) {
                                 $num = floatval(str_replace(',', '', $mVal[0]));
                                 if ($num > 10) $detectedCgst = $num;
+                            }
+                        }
+                    }
+                    // Extract Total if present in footer row
+                    if (preg_match('/^total\b|[\s\t]total\b/i', $rowStr) && !preg_match('/subtotal/i', $rowStr)) {
+                        foreach ($row as $cell) {
+                            $cVal = trim((string)$cell);
+                            if (preg_match('/[₹]?\s*([\d\,]+\.\d{2})/', $cVal, $mVal)) {
+                                $num = floatval(str_replace(',', '', $mVal[1]));
+                                if ($num > $detectedTotal) $detectedTotal = $num;
                             }
                         }
                     }
@@ -626,10 +606,18 @@ class PurchaseController extends Controller
                 $rateRawClean = preg_replace('/[^\d\.]/', '', $rateRaw);
                 $rate = floatval($rateRawClean);
 
-                // Parse Discount
+                // Parse Discount %
                 $discRaw = trim((string)($row[$colMap['disc']] ?? '0'));
                 $discRawClean = preg_replace('/[^\d\.]/', '', $discRaw);
                 $disc = floatval($discRawClean);
+
+                // Parse Amount
+                $amtRaw = trim((string)($row[$colMap['amount']] ?? '0'));
+                $amtRawClean = preg_replace('/[^\d\.]/', '', $amtRaw);
+                $amt = floatval($amtRawClean);
+                if ($amt <= 0 && $qty > 0 && $rate > 0) {
+                    $amt = round($qty * $rate, 2);
+                }
 
                 if ($qty <= 0 && $rate <= 0) {
                     continue;
@@ -674,11 +662,10 @@ class PurchaseController extends Controller
                     'uom' => $uom,
                     'quantity' => $qty,
                     'rate' => $rate,
-                    'discount_amount' => $disc,
+                    'discount_percent' => $disc,
+                    'amount' => $amt,
                     'packets' => $packets,
                     'mrp' => $mrp,
-                    'cgst_rate' => 20.00,
-                    'sgst_rate' => 20.00,
                 ];
             }
 
@@ -686,46 +673,29 @@ class PurchaseController extends Controller
                 return response()->json(['success' => false, 'message' => 'No valid item rows could be parsed from the Excel file.'], 422);
             }
 
-            // Distribute global discount proportionally across items if present
-            if ($globalDiscountAmount > 0) {
-                $totalBasicSum = 0;
-                foreach ($parsedItems as $pItm) {
-                    $totalBasicSum += ($pItm['quantity'] * $pItm['rate']);
-                }
-                if ($totalBasicSum > 0) {
-                    foreach ($parsedItems as &$pItm) {
-                        $lineBasic = $pItm['quantity'] * $pItm['rate'];
-                        $propDisc = round(($lineBasic / $totalBasicSum) * $globalDiscountAmount, 2);
-                        if ($pItm['discount_amount'] <= 0) {
-                            $pItm['discount_amount'] = $propDisc;
-                        }
-                    }
-                    unset($pItm);
-                }
+            // Calculate Subtotal from parsed items
+            $calcSubtotal = 0;
+            foreach ($parsedItems as $pItm) {
+                $calcSubtotal += $pItm['amount'];
             }
+            $calcSubtotal = round($calcSubtotal, 2);
 
-            // Calculate tax rates if tax amounts detected
-            if ($detectedSgst && $detectedCgst) {
-                $totalNetSum = 0;
-                foreach ($parsedItems as $pItm) {
-                    $totalNetSum += (($pItm['quantity'] * $pItm['rate']) - $pItm['discount_amount']);
-                }
-                if ($totalNetSum > 0) {
-                    $calcCgstRate = round(($detectedCgst / $totalNetSum) * 100, 2);
-                    $calcSgstRate = round(($detectedSgst / $totalNetSum) * 100, 2);
-                    foreach ($parsedItems as &$pItm) {
-                        $pItm['cgst_rate'] = $calcCgstRate;
-                        $pItm['sgst_rate'] = $calcSgstRate;
-                    }
-                    unset($pItm);
-                }
-            }
+            $finalDiscount = round($detectedDiscount, 2);
+            $finalSgst = round($detectedSgst, 2);
+            $finalCgst = round($detectedCgst, 2);
+            $calcGrandTotal = $detectedTotal > 0 ? $detectedTotal : round($calcSubtotal - $finalDiscount + $finalSgst + $finalCgst, 2);
 
             return response()->json([
                 'success' => true,
                 'vendor_id' => $matchedVendorId,
+                'vendor_name' => $extractedVendorName,
                 'bill_no' => $extractedBillNo,
                 'bill_date' => $extractedBillDate,
+                'subtotal' => $calcSubtotal,
+                'discount_allowed' => $finalDiscount,
+                'sgst_total' => $finalSgst,
+                'cgst_total' => $finalCgst,
+                'total_amount' => $calcGrandTotal,
                 'items' => $parsedItems,
                 'message' => count($parsedItems) . ' item(s) successfully imported from Excel file.'
             ]);

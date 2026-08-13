@@ -6,19 +6,15 @@
         min-width: 700px;
     }
     .bill-table thead th {
-        font-size: 0.75rem;
-        font-weight: 600;
+        font-size: 0.8rem;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.3px;
         white-space: nowrap;
         vertical-align: middle;
         text-align: center;
-        padding: 10px 6px;
+        padding: 10px 8px;
         background: #f5f5f9;
-    }
-    .bill-table thead .computed-head {
-        background: #eceeff !important;
-        color: #696cff;
     }
     .bill-table tbody td {
         font-size: 0.875rem;
@@ -29,7 +25,7 @@
         font-variant-numeric: tabular-nums;
     }
     .bill-table tfoot td {
-        padding: 10px 6px;
+        padding: 10px 8px;
         border-top: 2px solid #d9dee3;
         font-weight: 600;
     }
@@ -105,6 +101,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
         <h4 class="fw-bold m-0"><span class="text-muted fw-light">Purchases /</span> View Bill</h4>
         <div class="d-flex gap-2">
+            <a href="{{ route('admin.purchases.edit', $purchase->id) }}" class="btn btn-warning">
+                <i class="bx bx-edit me-1"></i> Edit Purchase
+            </a>
             <button type="button" class="btn btn-primary" onclick="window.print();">
                 <i class="bx bx-printer me-1"></i> Print Tax Invoice
             </button>
@@ -114,126 +113,18 @@
         </div>
     </div>
 
-    <!-- ERP Detailed Table View -->
-    <div class="card mb-4 no-print">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Purchase Bill: {{ $purchase->bill_no }}</h5>
-            <span class="badge-success-glow">{{ strtoupper($purchase->status) }}</span>
-        </div>
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <p class="mb-1"><strong>Supplier:</strong> {{ $purchase->vendor->name ?? 'N/A' }}</p>
-                    <p class="mb-1"><strong>Bill Date:</strong> {{ date('d-M-Y', strtotime($purchase->bill_date)) }}</p>
-                    @if($purchase->supplier_invoice_no)
-                        <p class="mb-1"><strong>Supplier Inv No:</strong> {{ $purchase->supplier_invoice_no }}</p>
-                    @endif
-                </div>
-                <div class="col-md-4">
-                    @if($purchase->eway_bill_no)
-                        <p class="mb-1"><strong>e-Way Bill:</strong> {{ $purchase->eway_bill_no }}</p>
-                    @endif
-                    @if($purchase->supplier_invoice_date)
-                        <p class="mb-1"><strong>Supplier Inv Date:</strong> {{ date('d-M-Y', strtotime($purchase->supplier_invoice_date)) }}</p>
-                    @endif
-                    @if($purchase->other_references)
-                        <p class="mb-1"><strong>Other Ref:</strong> {{ $purchase->other_references }}</p>
-                    @endif
-                </div>
-                <div class="col-md-4 text-end">
-                    <p class="mb-0"><strong>Total Amount:</strong> <span class="fs-4 fw-bold text-primary">₹ {{ number_format($purchase->total_amount, 2) }}</span></p>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-bordered align-middle bill-table">
-                    <thead>
-                        <tr>
-                            <th style="width:5%;">Sl No.</th>
-                            <th style="width:35%; text-align:left;">Description of Goods</th>
-                            <th style="width:13%; text-align:right;">Quantity</th>
-                            <th style="width:12%; text-align:right;">Rate</th>
-                            <th style="width:8%;">per</th>
-                            <th style="width:10%; text-align:right;">Disc. %</th>
-                            <th style="width:15%; text-align:right;">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $totalQty = 0;
-                            $subtotal = 0;
-                            $totalDiscount = 0;
-                            $totalCGST = 0;
-                            $totalSGST = 0;
-                        @endphp
-                        @foreach($purchase->items as $idx => $pItem)
-                            @php
-                                $basicAmt = $pItem->quantity * $pItem->rate;
-                                $discAmt = $pItem->discount_amount ?? 0;
-                                $lineAmt = $basicAmt - $discAmt;
-                                $totalQty += $pItem->quantity;
-                                $subtotal += $basicAmt;
-                                $totalDiscount += $discAmt;
-                                $totalCGST += $pItem->cgst_amount;
-                                $totalSGST += $pItem->sgst_amount;
-                            @endphp
-                            <tr>
-                                <td class="text-center">{{ $idx + 1 }}</td>
-                                <td><strong>{{ $pItem->item->name ?? 'N/A' }}</strong></td>
-                                <td class="text-end">{{ number_format($pItem->quantity, 2) }}</td>
-                                <td class="text-end">{{ number_format($pItem->rate, 2) }}</td>
-                                <td class="text-center">{{ $pItem->uom ?? 'PCS' }}</td>
-                                <td class="text-end">{{ $discAmt > 0 ? number_format(($discAmt / ($basicAmt ?: 1)) * 100, 2) . '%' : '-' }}</td>
-                                <td class="text-end">{{ number_format($lineAmt, 2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot>
-                        <tr class="table-light">
-                            <td colspan="2" class="text-end"><strong>Total</strong></td>
-                            <td class="text-end"><strong>{{ number_format($totalQty, 2) }}</strong></td>
-                            <td colspan="3"></td>
-                            <td class="text-end"><strong>{{ number_format($subtotal, 2) }}</strong></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <!-- Summary Section -->
-            <div class="row mt-3">
-                <div class="col-md-7"></div>
-                <div class="col-md-5">
-                    <table class="table table-bordered mb-0" style="font-size:0.9rem;">
-                        <tr>
-                            <td class="text-end fw-semibold bg-light">Subtotal</td>
-                            <td class="text-end" style="min-width:140px;">{{ number_format($subtotal, 2) }}</td>
-                        </tr>
-                        @if($totalDiscount > 0)
-                        <tr>
-                            <td class="text-end fw-semibold bg-light text-danger"><em>Less: Discount Allowed</em></td>
-                            <td class="text-end text-danger">-{{ number_format($totalDiscount, 2) }}</td>
-                        </tr>
-                        @endif
-                        <tr>
-                            <td class="text-end fw-semibold bg-light">SGST</td>
-                            <td class="text-end">{{ number_format($totalSGST, 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-end fw-semibold bg-light">CGST</td>
-                            <td class="text-end">{{ number_format($totalCGST, 2) }}</td>
-                        </tr>
-                        <tr style="background:#eef2ff;">
-                            <td class="text-end fw-bold">₹ Grand Total</td>
-                            <td class="text-end fw-bold fs-5">{{ number_format($purchase->total_amount, 2) }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tally / ITC Style Tax Invoice Layout (For View & Printing) -->
     @php
+        $totalQty = 0;
+        $subtotal = 0;
+        foreach($purchase->items as $pItem) {
+            $totalQty += $pItem->quantity;
+            $subtotal += round($pItem->quantity * $pItem->rate, 2);
+        }
+        $discountAllowed = $purchase->discount_allowed ?? 0;
+        $sgstTotal = $purchase->sgst_total ?? 0;
+        $cgstTotal = $purchase->cgst_total ?? 0;
+        $grandTotal = $purchase->total_amount;
+
         if (!function_exists('numberToWordsIndian')) {
             function numberToWordsIndian($number) {
                 $no = floor($number);
@@ -270,9 +161,10 @@
                 return ($rupees ? "INR " . trim($rupees) : "INR Zero") . $paise . " Only";
             }
         }
-        $amountInWords = numberToWordsIndian($purchase->total_amount);
+        $amountInWords = numberToWordsIndian($grandTotal);
     @endphp
 
+    <!-- Tally / ITC Style Tax Invoice Layout (For View & Printing) -->
     <div class="card tally-invoice-card p-0 mb-4" id="printableInvoice">
         <div class="text-center py-2 border-bottom fw-bold" style="background:#f9f9f9; font-size:14px; text-transform:uppercase; letter-spacing:1px;">
             GST Tax Invoice / Purchase Bill
@@ -318,13 +210,13 @@
                 <div class="row m-0">
                     <div class="col-12 tally-box">
                         <span class="text-muted" style="font-size:11px;">Supplier Invoice No. & Date</span><br>
-                        dt. {{ date('d-M-y', strtotime($purchase->bill_date)) }}
+                        {{ $purchase->supplier_invoice_no ?? $purchase->bill_no }} dt. {{ date('d-M-y', strtotime($purchase->supplier_invoice_date ?? $purchase->bill_date)) }}
                     </div>
                 </div>
                 <div class="row m-0">
                     <div class="col-12 tally-box" style="border-bottom:none; min-height:85px;">
                         <span class="text-muted" style="font-size:11px;">Other References</span><br>
-                        -
+                        {{ $purchase->other_references ?? '-' }}
                     </div>
                 </div>
             </div>
@@ -346,7 +238,7 @@
             <tbody>
                 @foreach($purchase->items as $idx => $pItem)
                     @php
-                        $bAmt = $pItem->quantity * $pItem->rate;
+                        $bAmt = round($pItem->quantity * $pItem->rate, 2);
                     @endphp
                     <tr>
                         <td class="text-center">{{ $idx + 1 }}</td>
@@ -354,34 +246,34 @@
                         <td class="text-end">{{ number_format($pItem->quantity, 2) }} {{ $pItem->uom ?? 'PCS' }}</td>
                         <td class="text-end">{{ number_format($pItem->rate, 2) }}</td>
                         <td class="text-center">{{ $pItem->uom ?? 'PCS' }}</td>
-                        <td class="text-end">{{ $pItem->discount_amount > 0 ? number_format(($pItem->discount_amount / ($bAmt ?: 1)) * 100, 2) . '%' : '' }}</td>
+                        <td class="text-end"></td>
                         <td class="text-end">{{ number_format($bAmt, 2) }}</td>
                     </tr>
                 @endforeach
 
                 <!-- Summary / Tax Rows -->
-                @if($totalDiscount > 0)
+                @if($discountAllowed > 0)
                 <tr>
                     <td></td>
                     <td class="text-end font-italic"><em>Less: Discount Allowed</em></td>
                     <td colspan="4"></td>
-                    <td class="text-end text-danger">-{{ number_format($totalDiscount, 2) }}</td>
+                    <td class="text-end text-danger">-{{ number_format($discountAllowed, 2) }}</td>
                 </tr>
                 @endif
-                @if($totalSGST > 0)
+                @if($sgstTotal > 0)
                 <tr>
                     <td></td>
                     <td class="text-end"><strong>SGST</strong></td>
                     <td colspan="4"></td>
-                    <td class="text-end">{{ number_format($totalSGST, 2) }}</td>
+                    <td class="text-end">{{ number_format($sgstTotal, 2) }}</td>
                 </tr>
                 @endif
-                @if($totalCGST > 0)
+                @if($cgstTotal > 0)
                 <tr>
                     <td></td>
                     <td class="text-end"><strong>CGST</strong></td>
                     <td colspan="4"></td>
-                    <td class="text-end">{{ number_format($totalCGST, 2) }}</td>
+                    <td class="text-end">{{ number_format($cgstTotal, 2) }}</td>
                 </tr>
                 @endif
 
@@ -390,7 +282,7 @@
                     <td colspan="2" class="text-end">Total</td>
                     <td class="text-end">{{ number_format($totalQty, 2) }} PCS</td>
                     <td colspan="3"></td>
-                    <td class="text-end fs-6">₹ {{ number_format($purchase->total_amount, 2) }}</td>
+                    <td class="text-end fs-6">₹ {{ number_format($grandTotal, 2) }}</td>
                 </tr>
             </tbody>
         </table>
