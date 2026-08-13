@@ -73,6 +73,9 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Sale Bill: {{ $sale->bill_no }}</h5>
             <div>
+                <a href="{{ route('admin.sales.edit', $sale->id) }}" class="btn btn-sm btn-warning me-2">
+                    <i class="bx bx-edit me-1"></i> Edit
+                </a>
                 <a href="{{ route('admin.sales.invoice', $sale->id) }}" class="btn btn-sm btn-primary me-2" target="_blank">
                     <i class="bx bx-printer me-1"></i> Print Invoice
                 </a>
@@ -85,7 +88,8 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <p class="mb-1"><strong>Customer:</strong> {{ $sale->customer->name ?? 'N/A' }}</p>
-                    <p class="mb-0"><strong>Bill Date:</strong> {{ date('d-M-Y', strtotime($sale->bill_date)) }}</p>
+                    <p class="mb-1"><strong>Bill Date:</strong> {{ date('d-M-Y', strtotime($sale->bill_date)) }}</p>
+                    <p class="mb-0"><strong>Payment Mode:</strong> <span class="badge bg-label-primary fs-6">{{ $sale->payment_mode ?? 'Cash' }}</span></p>
                 </div>
                 <div class="col-md-6 text-end">
                     <p class="mb-2"><strong>Status:</strong> <span class="badge-success-glow">{{ strtoupper($sale->status) }}</span></p>

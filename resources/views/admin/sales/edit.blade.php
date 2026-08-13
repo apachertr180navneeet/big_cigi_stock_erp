@@ -139,10 +139,10 @@
 
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Sales /</span> Add Sale</h4>
+    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Sales /</span> Edit Sale</h4>
     <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between">
-            <h5 class="mb-0">New Sale Bill</h5>
+            <h5 class="mb-0">Edit Sale Bill - {{ $sale->bill_no }}</h5>
             <a href="{{ route('admin.sales.index') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bx bx-arrow-back me-1"></i> Back to List
             </a>
@@ -157,35 +157,37 @@
                     </ul>
                 </div>
             @endif
-            <form action="{{ route('admin.sales.store') }}" method="POST">
+            <form action="{{ route('admin.sales.update', $sale->id) }}" method="POST">
                 @csrf
+                @method('PUT')
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Customer <span class="text-danger">*</span></label>
                         <select name="customer_id" class="form-select" required>
                             <option value="">Select Customer</option>
                             @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                <option value="{{ $customer->id }}" {{ $sale->customer_id == $customer->id ? 'selected' : '' }}>{{ $customer->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Bill No <span class="text-danger">*</span></label>
-                        <input type="text" name="bill_no" class="form-control" required>
+                        <input type="text" name="bill_no" class="form-control" required value="{{ $sale->bill_no }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Bill Date <span class="text-danger">*</span></label>
-                        <input type="date" name="bill_date" class="form-control" required value="{{ date('Y-m-d') }}">
+                        <input type="date" name="bill_date" class="form-control" required value="{{ $sale->bill_date }}">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Payment Mode <span class="text-danger">*</span></label>
                         <select name="payment_mode" class="form-select" required>
-                            <option value="Cash" selected>Cash</option>
-                            <option value="UPI">UPI</option>
-                            <option value="Card">Card</option>
-                            <option value="Net Banking">Net Banking</option>
-                            <option value="Cheque">Cheque</option>
-                            <option value="Credit">Credit</option>
+                            @php $pm = $sale->payment_mode ?? 'Cash'; @endphp
+                            <option value="Cash" {{ $pm == 'Cash' ? 'selected' : '' }}>Cash</option>
+                            <option value="UPI" {{ $pm == 'UPI' ? 'selected' : '' }}>UPI</option>
+                            <option value="Card" {{ $pm == 'Card' ? 'selected' : '' }}>Card</option>
+                            <option value="Net Banking" {{ $pm == 'Net Banking' ? 'selected' : '' }}>Net Banking</option>
+                            <option value="Cheque" {{ $pm == 'Cheque' ? 'selected' : '' }}>Cheque</option>
+                            <option value="Credit" {{ $pm == 'Credit' ? 'selected' : '' }}>Credit</option>
                         </select>
                     </div>
                 </div>
@@ -210,20 +212,22 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @foreach($sale->items as $index => $sItem)
                             <tr>
                                 <td>
-                                    <select name="items[0][item_id]" class="form-select item-select" required>
+                                    <select name="items[{{ $index }}][item_id]" class="form-select item-select" required>
                                         <option value="">Select Item</option>
                                         @foreach($items as $item)
-                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                            <option value="{{ $item->id }}" {{ $sItem->item_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
                                         @endforeach
                                     </select>
                                 </td>
-                                <td><input type="number" step="0.01" name="items[0][quantity]" class="form-control qty-input text-end" required placeholder="0"></td>
-                                <td><input type="number" step="0.01" name="items[0][rate]" class="form-control rate-input text-end" required placeholder="0.00"></td>
-                                <td class="computed-col"><div class="computed-cell total-cell amount-display">0.00</div></td>
+                                <td><input type="number" step="0.01" name="items[{{ $index }}][quantity]" class="form-control qty-input text-end" required value="{{ $sItem->quantity }}"></td>
+                                <td><input type="number" step="0.01" name="items[{{ $index }}][rate]" class="form-control rate-input text-end" required value="{{ $sItem->rate }}"></td>
+                                <td class="computed-col"><div class="computed-cell total-cell amount-display" data-val="{{ $sItem->amount }}">{{ number_format($sItem->amount, 2) }}</div></td>
                                 <td class="text-center"><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-row"><i class="bx bx-trash"></i></button></td>
                             </tr>
+                            @endforeach
                         </tbody>
                         <tfoot>
                             <tr>
@@ -244,23 +248,23 @@
                         <div class="bill-summary-card">
                             <div class="summary-row">
                                 <span class="label">Items Subtotal</span>
-                                <span class="value" id="summarySubtotal">₹ 0.00</span>
+                                <span class="value" id="summarySubtotal">₹ {{ number_format($sale->total_amount, 2) }}</span>
                             </div>
                             <div class="summary-row">
                                 <span class="label">Discount</span>
                                 <div style="width: 140px;">
-                                    <input type="number" step="0.01" name="discount_amount" class="form-control form-control-sm text-end" id="discountInput" value="0.00">
+                                    <input type="number" step="0.01" name="discount_amount" class="form-control form-control-sm text-end" id="discountInput" value="{{ number_format($sale->discount_amount, 2, '.', '') }}">
                                 </div>
                             </div>
                             <div class="summary-row">
                                 <span class="label">40% Cess</span>
                                 <div style="width: 140px;">
-                                    <input type="number" step="0.01" name="cess_amount" class="form-control form-control-sm text-end" id="cessInput" value="0.00" readonly>
+                                    <input type="number" step="0.01" name="cess_amount" class="form-control form-control-sm text-end" id="cessInput" value="{{ number_format($sale->cess_amount, 2, '.', '') }}" readonly>
                                 </div>
                             </div>
                             <div class="summary-row total-row">
                                 <span>Net Amt Payable</span>
-                                <span id="netPayableDisplay">₹ 0.00</span>
+                                <span id="netPayableDisplay">₹ {{ number_format($sale->net_payable, 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -273,10 +277,10 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="grand-total-box">
                             <span class="label">Net Payable ₹</span>
-                            <span class="value" id="grandTotalDisplay">0.00</span>
+                            <span class="value" id="grandTotalDisplay">{{ number_format($sale->net_payable, 2) }}</span>
                         </div>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bx bx-save me-1"></i> Save Sale
+                            <i class="bx bx-save me-1"></i> Update Sale
                         </button>
                     </div>
                 </div>
@@ -289,9 +293,9 @@
 @section('script')
 <script>
     $(document).ready(function() {
-        let rowIdx = 1;
+        let rowIdx = {{ count($sale->items) }};
 
-        // Item data for auto-populating HS Code & Brand Code
+        // Item data for auto-populating rate
         let itemData = {};
         @foreach($items as $item)
             itemData[{{ $item->id }}] = {
@@ -397,6 +401,11 @@
         $(document).on('change', '.item-select', function() {
             let row = $(this).closest('tr');
             populateItemInfo(row);
+        });
+
+        // Initial calculation on page load
+        $('#itemsTable tbody tr').each(function() {
+            calculateRow($(this));
         });
     });
 </script>

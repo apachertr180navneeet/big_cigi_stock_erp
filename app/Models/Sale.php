@@ -14,6 +14,7 @@ class Sale extends Model
         'customer_id',
         'bill_no',
         'bill_date',
+        'payment_mode',
         'total_amount',
         'discount_amount',
         'cess_amount',

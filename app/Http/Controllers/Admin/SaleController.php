@@ -33,6 +33,7 @@ class SaleController extends Controller
             'customer_id' => 'required',
             'bill_no' => 'required',
             'bill_date' => 'required|date',
+            'payment_mode' => 'nullable|string|max:50',
             'items' => 'required|array|min:1',
             'items.*.item_id' => 'required',
             'items.*.no_of_package' => 'nullable|numeric|min:0',
@@ -89,6 +90,7 @@ class SaleController extends Controller
                 'customer_id' => $request->customer_id,
                 'bill_no' => $request->bill_no,
                 'bill_date' => $request->bill_date,
+                'payment_mode' => $request->payment_mode ?? 'Cash',
                 'total_amount' => $total_amount,
                 'discount_amount' => $discount_amount,
                 'cess_amount' => $cess_amount,
@@ -174,6 +176,167 @@ class SaleController extends Controller
     {
         $sale = Sale::with(['customer', 'items.item'])->findOrFail($id);
         return view('admin.sales.show', compact('sale'));
+    }
+
+    public function edit($id)
+    {
+        $sale = Sale::with('items')->findOrFail($id);
+        $customers = Customer::where('status', 1)->get();
+        $items = ItemMaster::where('status', 1)->get();
+        return view('admin.sales.edit', compact('sale', 'customers', 'items'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $sale = Sale::with('items')->findOrFail($id);
+
+        $request->validate([
+            'customer_id' => 'required',
+            'bill_no' => 'required',
+            'bill_date' => 'required|date',
+            'payment_mode' => 'nullable|string|max:50',
+            'items' => 'required|array|min:1',
+            'items.*.item_id' => 'required',
+            'items.*.no_of_package' => 'nullable|numeric|min:0',
+            'items.*.uom' => 'nullable|string|max:255',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.rate' => 'required|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'cess_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Revert stock changes for existing items in this sale
+            foreach ($sale->items as $oldItem) {
+                $itemMaster = ItemMaster::find($oldItem->item_id);
+                if ($itemMaster) {
+                    $revertedQty = $oldItem->quantity + ($oldItem->free_qty ?? 0);
+                    $itemMaster->increment('current_stock', $revertedQty);
+                }
+            }
+
+            // Delete old stock ledger entries and sale items
+            StockLedger::where('transaction_type', 'sale')->where('transaction_id', $sale->id)->delete();
+            $sale->items()->delete();
+
+            $total_amount = 0;
+
+            foreach ($request->items as $itemData) {
+                $qty = $itemData['quantity'];
+                $rate = $itemData['rate'];
+                $discount_percent = $itemData['discount_percent'] ?? 0;
+                $discount_amount = $itemData['discount_amount'] ?? 0;
+                $other_discount = $itemData['other_discount'] ?? 0;
+                $packets = $itemData['packets'] ?? 0;
+                $mrp = $itemData['mrp'] ?? 0;
+                $cgst_rate = $itemData['cgst_rate'] ?? 0;
+                $sgst_rate = $itemData['sgst_rate'] ?? 0;
+
+                $basic_value = round($qty * $rate, 2);
+
+                if ($discount_percent > 0 && $discount_amount == 0) {
+                    $discount_amount = round($basic_value * ($discount_percent / 100), 2);
+                }
+
+                $net_amount = round($basic_value - $discount_amount - $other_discount, 2);
+                $total_value = round($packets * $mrp, 2);
+                $taxable_value = $total_value > 0 ? round($total_value / 1.40, 2) : 0;
+                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
+                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
+                $tax_amount = $cgst_amount + $sgst_amount;
+                $item_amount = round($net_amount + $tax_amount, 2);
+
+                $total_amount += $item_amount;
+            }
+
+            $discount_amount = $request->discount_amount ?? 0;
+            $cess_amount = $request->cess_amount ?? 0;
+            $net_payable = round($total_amount - $discount_amount + $cess_amount, 2);
+
+            $sale->update([
+                'customer_id' => $request->customer_id,
+                'bill_no' => $request->bill_no,
+                'bill_date' => $request->bill_date,
+                'payment_mode' => $request->payment_mode ?? 'Cash',
+                'total_amount' => $total_amount,
+                'discount_amount' => $discount_amount,
+                'cess_amount' => $cess_amount,
+                'net_payable' => $net_payable,
+            ]);
+
+            foreach ($request->items as $itemData) {
+                $qty = $itemData['quantity'];
+                $free_qty = $itemData['free_qty'] ?? 0;
+                $rate = $itemData['rate'];
+                $discount_percent = $itemData['discount_percent'] ?? 0;
+                $discount_amount = $itemData['discount_amount'] ?? 0;
+                $other_discount = $itemData['other_discount'] ?? 0;
+                $packets = $itemData['packets'] ?? 0;
+                $mrp = $itemData['mrp'] ?? 0;
+                $cgst_rate = $itemData['cgst_rate'] ?? 0;
+                $sgst_rate = $itemData['sgst_rate'] ?? 0;
+
+                $basic_value = round($qty * $rate, 2);
+
+                if ($discount_percent > 0 && $discount_amount == 0) {
+                    $discount_amount = round($basic_value * ($discount_percent / 100), 2);
+                }
+
+                $net_amount = round($basic_value - $discount_amount - $other_discount, 2);
+                $total_value = round($packets * $mrp, 2);
+                $taxable_value = $total_value > 0 ? round($total_value / 1.40, 2) : 0;
+                $cgst_amount = round($taxable_value * ($cgst_rate / 100), 2);
+                $sgst_amount = round($taxable_value * ($sgst_rate / 100), 2);
+                $tax_amount = $cgst_amount + $sgst_amount;
+                $amount = round($net_amount + $tax_amount, 2);
+
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'item_id' => $itemData['item_id'],
+                    'no_of_package' => $itemData['no_of_package'] ?? 0,
+                    'uom' => $itemData['uom'] ?? null,
+                    'quantity' => $qty,
+                    'free_qty' => $free_qty,
+                    'rate' => $rate,
+                    'discount_percent' => $discount_percent,
+                    'discount_amount' => $discount_amount,
+                    'other_discount' => $other_discount,
+                    'packets' => $packets,
+                    'mrp' => $mrp,
+                    'taxable_value' => $taxable_value,
+                    'cgst_rate' => $cgst_rate,
+                    'cgst_amount' => $cgst_amount,
+                    'sgst_rate' => $sgst_rate,
+                    'sgst_amount' => $sgst_amount,
+                    'tax_amount' => $tax_amount,
+                    'amount' => $amount,
+                ]);
+
+                // Update Stock (Decrease)
+                $item = ItemMaster::find($itemData['item_id']);
+                $totalDispatched = $qty + $free_qty;
+                $newStock = $item->current_stock - $totalDispatched;
+
+                StockLedger::create([
+                    'item_id' => $item->id,
+                    'transaction_type' => 'sale',
+                    'transaction_id' => $sale->id,
+                    'quantity' => -$totalDispatched,
+                    'running_balance' => $newStock,
+                ]);
+
+                $item->update(['current_stock' => $newStock]);
+            }
+
+            DB::commit();
+            return redirect()->route('admin.sales.index')->with('success', 'Sale bill updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     public function invoice($id)

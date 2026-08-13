@@ -15,6 +15,7 @@
                         <th>Bill No</th>
                         <th>Bill Date</th>
                         <th>Customer</th>
+                        <th>Payment Mode</th>
                         <th>Total Amount</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -26,16 +27,18 @@
                         <td>{{ $sale->bill_no }}</td>
                         <td>{{ $sale->bill_date }}</td>
                         <td>{{ $sale->customer->name ?? 'N/A' }}</td>
-                        <td>{{ $sale->total_amount }}</td>
+                        <td><span class="badge bg-label-primary">{{ $sale->payment_mode ?? 'Cash' }}</span></td>
+                        <td>{{ number_format($sale->net_payable > 0 ? $sale->net_payable : $sale->total_amount, 2) }}</td>
                         <td><span class="badge bg-success">{{ $sale->status }}</span></td>
                         <td>
                             <a href="{{ route('admin.sales.show', $sale->id) }}" class="btn btn-sm btn-info">View</a>
+                            <a href="{{ route('admin.sales.edit', $sale->id) }}" class="btn btn-sm btn-warning">Edit</a>
                             <a href="{{ route('admin.sales.invoice', $sale->id) }}" class="btn btn-sm btn-secondary" target="_blank">Invoice</a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center">No sales found</td>
+                        <td colspan="7" class="text-center">No sales found</td>
                     </tr>
                     @endforelse
                 </tbody>
