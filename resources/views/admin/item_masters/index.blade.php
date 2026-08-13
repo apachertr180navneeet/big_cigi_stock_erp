@@ -36,7 +36,7 @@
                         <td>{{ $item->sale_price }}</td>
                         <td>{{ $item->pack_size }}</td>
                         <td>{{ $item->current_stock }}</td>
-                        <td>{{ intval($item->current_stock / $item->pack_size) }}</td>
+                        <td>{{ $item->pack_size > 0 ? intval($item->current_stock / $item->pack_size) : 0 }}</td>
                         <td>
                             <div class="form-check form-switch">
                                 <input class="form-check-input status-toggle" type="checkbox" id="status-{{ $item->id }}" data-id="{{ $item->id }}" {{ $item->status ? 'checked' : '' }}>
