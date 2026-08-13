@@ -70,6 +70,8 @@ Route::name('admin.')->prefix('admin')->group(function () {
         Route::get('item-masters/template', [ItemMasterController::class, 'downloadTemplate'])->name('item_masters.template');
         Route::resource('item_masters', ItemMasterController::class);
 
+        Route::post('purchases/parse-excel', [PurchaseController::class, 'parseExcel'])->name('purchases.parse_excel');
+        Route::get('purchases/template', [PurchaseController::class, 'downloadTemplate'])->name('purchases.template');
         Route::resource('purchases', PurchaseController::class);
         Route::resource('sales', SaleController::class);
         Route::get('sales/{id}/invoice', [SaleController::class, 'invoice'])->name('sales.invoice');

@@ -156,9 +156,14 @@
                 <hr>
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <h6 class="mb-0"><i class="bx bx-box me-1"></i> Items</h6>
-                    <button type="button" class="btn btn-sm btn-primary" id="addRow">
-                        <i class="bx bx-plus me-1"></i> Add Item
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                            <i class="bx bx-file me-1"></i> Import Excel
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary" id="addRow">
+                            <i class="bx bx-plus me-1"></i> Add Item
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-responsive">
@@ -253,6 +258,42 @@
                             <i class="bx bx-save me-1"></i> Save Purchase
                         </button>
                     </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Excel Modal -->
+<div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bx bx-file me-2 text-success"></i>Import Purchase Items from Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="excelImportForm" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 px-3 mb-3">
+                        <small><i class="bx bx-info-circle me-1"></i> Upload your purchase bill Excel file (ITC invoice format or standard format). Item descriptions, quantities, rates, and amounts will be populated automatically into the table.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Select Excel File (.xlsx, .xls, .csv)</label>
+                        <input type="file" name="file" id="excelFileInput" class="form-control" accept=".xlsx,.xls,.csv" required>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ route('admin.purchases.template') }}" class="btn btn-sm btn-link text-decoration-none px-0">
+                            <i class="bx bx-download me-1"></i> Download Sample Excel Template
+                        </a>
+                    </div>
+                    <div id="importAlert" class="mt-3 d-none alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success" id="btnUploadExcel">
+                        <i class="bx bx-upload me-1"></i> Upload & Import
+                    </button>
                 </div>
             </form>
         </div>
@@ -400,6 +441,109 @@
             let row = $(this).closest('tr');
             populateItemInfo(row);
         });
+
+        // Excel Import Handler
+        $('#excelImportForm').on('submit', function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            let btn = $('#btnUploadExcel');
+            let alertBox = $('#importAlert');
+
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Parsing Excel...');
+            alertBox.addClass('d-none').removeClass('alert-danger alert-success').text('');
+
+            $.ajax({
+                url: "{{ route('admin.purchases.parse_excel') }}",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}'
+                },
+                success: function(res) {
+                    btn.prop('disabled', false).html('<i class="bx bx-upload me-1"></i> Upload & Import');
+                    if (res.success) {
+                        if (res.vendor_id && !$('select[name="vendor_id"]').val()) {
+                            $('select[name="vendor_id"]').val(res.vendor_id);
+                        }
+
+                        if (res.items && res.items.length > 0) {
+                            let firstRow = $('#itemsTable tbody tr:first');
+                            let isFirstRowEmpty = $('#itemsTable tbody tr').length === 1 && !firstRow.find('.item-select').val();
+
+                            if (isFirstRowEmpty) {
+                                $('#itemsTable tbody').empty();
+                            }
+
+                            res.items.forEach(function(item) {
+                                appendImportedRow(item);
+                            });
+
+                            $('#itemsTable tbody tr').each(function() {
+                                calculateRow($(this));
+                            });
+
+                            $('#importExcelModal').modal('hide');
+                            $('#excelImportForm')[0].reset();
+                            alert(res.message);
+                        }
+                    } else {
+                        alertBox.removeClass('d-none').addClass('alert-danger').text(res.message || 'Error parsing Excel.');
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).html('<i class="bx bx-upload me-1"></i> Upload & Import');
+                    let msg = 'Import failed.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    alertBox.removeClass('d-none').addClass('alert-danger').text(msg);
+                }
+            });
+        });
+
+        function appendImportedRow(item) {
+            let options = '<option value="">Select Item</option>';
+            @foreach($items as $itm)
+                let sel{{ $itm->id }} = ({{ $itm->id }} == item.item_id) ? 'selected' : '';
+                options += `<option value="{{ $itm->id }}" ${sel{{ $itm->id }}}>{{ addslashes($itm->name) }}</option>`;
+            @endforeach
+            if (options.indexOf(`value="${item.item_id}"`) === -1) {
+                options += `<option value="${item.item_id}" selected>${item.item_name}</option>`;
+                itemData[item.item_id] = { hsn: item.hsn || '', brand_code: item.brand_code || '' };
+            }
+
+            let newRow = $(`<tr>
+                <td><div class="auto-field hs-display">${item.hsn || '-'}</div></td>
+                <td><div class="auto-field brand-display">${item.brand_code || '-'}</div></td>
+                <td>
+                    <select name="items[${rowIdx}][item_id]" class="form-select item-select" required>
+                        ${options}
+                    </select>
+                </td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][no_of_package]" class="form-control package-input text-end" value="${item.no_of_package || 0}" placeholder="0"></td>
+                <td><input type="text" name="items[${rowIdx}][uom]" class="form-control uom-input text-center" value="${item.uom || 'PCS'}" placeholder="UOM"></td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][quantity]" class="form-control qty-input text-end" value="${item.quantity || 0}" required placeholder="0"></td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][rate]" class="form-control rate-input text-end" value="${item.rate || 0}" required placeholder="0.00"></td>
+                <td class="computed-col"><div class="computed-cell basic-display">0.00</div></td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][discount_amount]" class="form-control discount-input text-end" value="${item.discount_amount || 0}" placeholder="0.00"></td>
+                <td class="computed-col"><div class="computed-cell net-display">0.00</div></td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][packets]" class="form-control packets-input text-end" value="${item.packets || 0}" required placeholder="0"></td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][mrp]" class="form-control mrp-input text-end" value="${item.mrp || 0}" required placeholder="0.00"></td>
+                <td class="computed-col"><div class="computed-cell taxable-display">0.00</div></td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][cgst_rate]" class="form-control cgst-rate-input text-end" value="${item.cgst_rate || 20.00}"></td>
+                <td class="computed-col"><div class="computed-cell cgst-amt-display">0.00</div></td>
+                <td><input type="number" step="0.01" name="items[${rowIdx}][sgst_rate]" class="form-control sgst-rate-input text-end" value="${item.sgst_rate || 20.00}"></td>
+                <td class="computed-col"><div class="computed-cell sgst-amt-display">0.00</div></td>
+                <td class="computed-col"><div class="computed-cell total-cell amount-display">0.00</div></td>
+                <td class="text-center"><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-row"><i class="bx bx-trash"></i></button></td>
+            </tr>`);
+
+            $('#itemsTable tbody').append(newRow);
+            rowIdx++;
+            populateItemInfo(newRow);
+        }
     });
 </script>
 @endsection
