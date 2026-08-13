@@ -29,7 +29,8 @@
                         <td>{{ $purchase->total_amount }}</td>
                         <td><span class="badge bg-success">{{ $purchase->status }}</span></td>
                         <td>
-                            <a href="{{ route('admin.purchases.show', $purchase->id) }}" class="btn btn-sm btn-info">View</a>
+                            <a href="{{ route('admin.purchases.show', $purchase->id) }}" class="btn btn-sm btn-info me-1">View</a>
+                            <a href="{{ route('admin.purchases.edit', $purchase->id) }}" class="btn btn-sm btn-warning">Edit</a>
                         </td>
                     </tr>
                     @empty

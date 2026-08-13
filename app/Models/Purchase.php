@@ -14,6 +14,13 @@ class Purchase extends Model
         'vendor_id',
         'bill_no',
         'bill_date',
+        'eway_bill_no',
+        'supplier_invoice_no',
+        'supplier_invoice_date',
+        'other_references',
+        'discount_allowed',
+        'cgst_total',
+        'sgst_total',
         'total_amount',
         'status',
     ];

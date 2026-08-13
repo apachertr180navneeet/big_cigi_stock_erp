@@ -106,15 +106,10 @@
 @section('content')
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <h4 class="fw-bold m-0"><span class="text-muted fw-light">Purchases /</span> New Purchase Bill</h4>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importExcelModal">
-                <i class="bx bx-file me-1"></i> Import Excel
-            </button>
-            <a href="{{ route('admin.purchases.index') }}" class="btn btn-outline-secondary">
-                <i class="bx bx-arrow-back me-1"></i> Back to List
-            </a>
-        </div>
+        <h4 class="fw-bold m-0"><span class="text-muted fw-light">Purchases /</span> Edit Purchase #{{ $purchase->bill_no }}</h4>
+        <a href="{{ route('admin.purchases.index') }}" class="btn btn-outline-secondary">
+            <i class="bx bx-arrow-back me-1"></i> Back to List
+        </a>
     </div>
 
     <div class="card">
@@ -129,10 +124,11 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.purchases.store') }}" method="POST" id="purchaseForm">
+            <form action="{{ route('admin.purchases.update', $purchase->id) }}" method="POST" id="purchaseForm">
                 @csrf
+                @method('PUT')
 
-                <!-- Invoice Header Section (same as Excel header) -->
+                <!-- Invoice Header Section -->
                 <div class="invoice-section-card">
                     <div class="invoice-section-title">
                         <i class="bx bx-receipt me-1"></i> Tax Invoice Details
@@ -144,7 +140,7 @@
                                 <select name="vendor_id" class="form-select mb-2" required>
                                     <option value="">Select Supplier / Vendor</option>
                                     @foreach($vendors as $vendor)
-                                        <option value="{{ $vendor->id }}">{{ $vendor->name }}</option>
+                                        <option value="{{ $vendor->id }}" {{ $purchase->vendor_id == $vendor->id ? 'selected' : '' }}>{{ $vendor->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -152,15 +148,15 @@
                                 <div class="row g-2">
                                     <div class="col-12">
                                         <label class="form-label fw-bold">Invoice No. <span class="text-danger">*</span></label>
-                                        <input type="text" name="bill_no" class="form-control" placeholder="e.g. CO8A627100003593" required>
+                                        <input type="text" name="bill_no" class="form-control" value="{{ $purchase->bill_no }}" required>
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label">Supplier Inv No.</label>
-                                        <input type="text" name="supplier_invoice_no" class="form-control" placeholder="Supplier Inv No">
+                                        <input type="text" name="supplier_invoice_no" class="form-control" value="{{ $purchase->supplier_invoice_no ?? '' }}">
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label">e-Way Bill No.</label>
-                                        <input type="text" name="eway_bill_no" class="form-control" placeholder="e-Way Bill No">
+                                        <input type="text" name="eway_bill_no" class="form-control" value="{{ $purchase->eway_bill_no ?? '' }}">
                                     </div>
                                 </div>
                             </div>
@@ -168,15 +164,15 @@
                                 <div class="row g-2">
                                     <div class="col-12">
                                         <label class="form-label fw-bold">Dated <span class="text-danger">*</span></label>
-                                        <input type="date" name="bill_date" class="form-control" required value="{{ date('Y-m-d') }}">
+                                        <input type="date" name="bill_date" class="form-control" required value="{{ $purchase->bill_date }}">
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label">Supplier Inv Date</label>
-                                        <input type="date" name="supplier_invoice_date" class="form-control">
+                                        <input type="date" name="supplier_invoice_date" class="form-control" value="{{ $purchase->supplier_invoice_date ?? '' }}">
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label">Other Ref.</label>
-                                        <input type="text" name="other_references" class="form-control" placeholder="Ref.">
+                                        <input type="text" name="other_references" class="form-control" value="{{ $purchase->other_references ?? '' }}">
                                     </div>
                                 </div>
                             </div>
@@ -207,28 +203,30 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @foreach($purchase->items as $idx => $pItem)
                             <tr>
-                                <td class="text-center fw-bold sl-no">1</td>
+                                <td class="text-center fw-bold sl-no">{{ $idx + 1 }}</td>
                                 <td>
-                                    <select name="items[0][item_id]" class="form-select item-select" required>
+                                    <select name="items[{{ $idx }}][item_id]" class="form-select item-select" required>
                                         <option value="">Select Item</option>
                                         @foreach($items as $item)
-                                            <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                            <option value="{{ $item->id }}" {{ $pItem->item_id == $item->id ? 'selected' : '' }}>{{ $item->name }}</option>
                                         @endforeach
                                     </select>
-                                    <input type="hidden" name="items[0][no_of_package]" class="package-input" value="0">
-                                    <input type="hidden" name="items[0][packets]" class="packets-input" value="0">
-                                    <input type="hidden" name="items[0][mrp]" class="mrp-input" value="0">
-                                    <input type="hidden" name="items[0][cgst_rate]" class="cgst-rate-input" value="20.00">
-                                    <input type="hidden" name="items[0][sgst_rate]" class="sgst-rate-input" value="20.00">
+                                    <input type="hidden" name="items[{{ $idx }}][no_of_package]" class="package-input" value="{{ $pItem->no_of_package ?? 0 }}">
+                                    <input type="hidden" name="items[{{ $idx }}][packets]" class="packets-input" value="{{ $pItem->packets ?? $pItem->quantity }}">
+                                    <input type="hidden" name="items[{{ $idx }}][mrp]" class="mrp-input" value="{{ $pItem->mrp ?? $pItem->rate }}">
+                                    <input type="hidden" name="items[{{ $idx }}][cgst_rate]" class="cgst-rate-input" value="{{ $pItem->cgst_rate ?? 20.00 }}">
+                                    <input type="hidden" name="items[{{ $idx }}][sgst_rate]" class="sgst-rate-input" value="{{ $pItem->sgst_rate ?? 20.00 }}">
                                 </td>
-                                <td><input type="number" step="0.01" name="items[0][quantity]" class="form-control qty-input text-end" required placeholder="0.00"></td>
-                                <td><input type="number" step="0.01" name="items[0][rate]" class="form-control rate-input text-end" required placeholder="0.00"></td>
-                                <td><input type="text" name="items[0][uom]" class="form-control uom-input text-center" value="PCS"></td>
-                                <td><input type="number" step="0.01" name="items[0][discount_amount]" class="form-control discount-input text-end" value="0" placeholder="0"></td>
-                                <td><div class="amt-display amount-display">0.00</div></td>
+                                <td><input type="number" step="0.01" name="items[{{ $idx }}][quantity]" class="form-control qty-input text-end" value="{{ $pItem->quantity }}" required></td>
+                                <td><input type="number" step="0.01" name="items[{{ $idx }}][rate]" class="form-control rate-input text-end" value="{{ $pItem->rate }}" required></td>
+                                <td><input type="text" name="items[{{ $idx }}][uom]" class="form-control uom-input text-center" value="{{ $pItem->uom ?? 'PCS' }}"></td>
+                                <td><input type="number" step="0.01" name="items[{{ $idx }}][discount_amount]" class="form-control discount-input text-end" value="{{ $pItem->discount_amount ?? 0 }}"></td>
+                                <td><div class="amt-display amount-display">{{ number_format(($pItem->quantity * $pItem->rate) - ($pItem->discount_amount ?? 0), 2) }}</div></td>
                                 <td class="text-center"><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-row"><i class="bx bx-trash"></i></button></td>
                             </tr>
+                            @endforeach
                         </tbody>
                         <tfoot>
                             <tr>
@@ -242,7 +240,7 @@
                     </table>
                 </div>
 
-                <!-- Summary section (same as Excel footer: Subtotal, Discount, SGST, CGST, Grand Total) -->
+                <!-- Summary section (same as Excel footer) -->
                 <div class="row">
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded border">
@@ -278,35 +276,7 @@
 
                 <div class="d-flex justify-content-end mt-4 gap-2">
                     <a href="{{ route('admin.purchases.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary px-4"><i class="bx bx-save me-1"></i> Save Purchase Bill</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Excel Import Modal -->
-<div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bx bx-file me-1 text-success"></i> Import Purchase Invoice from Excel</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="excelImportForm" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="alert alert-info py-2 small">Upload Tally / ITC Excel Tax Invoice (.xlsx, .xls, .csv). System extracts Supplier, Invoice No., Date, and Items automatically.</div>
-                    <div id="importAlert" class="alert d-none py-2 small"></div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Select Excel Invoice File</label>
-                        <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <a href="{{ route('admin.purchases.template') }}" class="btn btn-sm btn-outline-secondary me-auto">Download Template</a>
-                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-sm btn-success" id="btnUploadExcel"><i class="bx bx-upload me-1"></i> Upload & Import</button>
+                    <button type="submit" class="btn btn-primary px-4"><i class="bx bx-save me-1"></i> Update Purchase Bill</button>
                 </div>
             </form>
         </div>
@@ -327,7 +297,7 @@
         @endforeach
     };
 
-    let rowIdx = 1;
+    let rowIdx = {{ count($purchase->items) }};
 
     function calculateRow(row) {
         let qty = parseFloat(row.find('.qty-input').val()) || 0;
@@ -362,7 +332,6 @@
         });
 
         let netAmount = subtotal - totalDiscount;
-        // Use first row's GST rates for summary
         let cgstRate = parseFloat($('#itemsTable tbody tr:first .cgst-rate-input').val()) || 20;
         let sgstRate = parseFloat($('#itemsTable tbody tr:first .sgst-rate-input').val()) || 20;
         let sgstAmt = netAmount * (sgstRate / 100);
@@ -406,6 +375,11 @@
     }
 
     $(document).ready(function() {
+        // Calculate on load for existing items
+        $('#itemsTable tbody tr').each(function() {
+            calculateRow($(this));
+        });
+
         $('#addRow').click(function() {
             let options = '<option value="">Select Item</option>';
             @foreach($items as $item)
@@ -443,89 +417,6 @@
         $(document).on('input', '.qty-input, .rate-input, .discount-input', function() {
             calculateRow($(this).closest('tr'));
         });
-
-        // Excel Import Handler
-        $('#excelImportForm').on('submit', function(e) {
-            e.preventDefault();
-            let formData = new FormData(this);
-            let btn = $('#btnUploadExcel');
-            let alertBox = $('#importAlert');
-            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Parsing...');
-            alertBox.addClass('d-none');
-
-            $.ajax({
-                url: "{{ route('admin.purchases.parse_excel') }}",
-                type: "POST",
-                data: formData,
-                contentType: false,
-                processData: false,
-                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}' },
-                success: function(res) {
-                    btn.prop('disabled', false).html('<i class="bx bx-upload me-1"></i> Upload & Import');
-                    if (res.success) {
-                        if (res.vendor_id) {
-                            if ($('select[name="vendor_id"] option[value="'+res.vendor_id+'"]').length === 0) {
-                                $('select[name="vendor_id"]').append(new Option(res.vendor_name || 'Vendor', res.vendor_id, true, true));
-                            } else {
-                                $('select[name="vendor_id"]').val(res.vendor_id);
-                            }
-                        }
-                        if (res.bill_no) $('input[name="bill_no"]').val(res.bill_no);
-                        if (res.bill_date) $('input[name="bill_date"]').val(res.bill_date);
-
-                        if (res.items && res.items.length > 0) {
-                            let isFirstEmpty = $('#itemsTable tbody tr').length === 1 && !$('#itemsTable tbody tr:first .item-select').val();
-                            if (isFirstEmpty) $('#itemsTable tbody').empty();
-
-                            res.items.forEach(function(item) { appendImportedRow(item); });
-                            $('#itemsTable tbody tr').each(function() { calculateRow($(this)); });
-                            $('#importExcelModal').modal('hide');
-                            $('#excelImportForm')[0].reset();
-                            alert(res.message);
-                        }
-                    } else {
-                        alertBox.removeClass('d-none').addClass('alert-danger').text(res.message || 'Error parsing Excel.');
-                    }
-                },
-                error: function(xhr) {
-                    btn.prop('disabled', false).html('<i class="bx bx-upload me-1"></i> Upload & Import');
-                    alertBox.removeClass('d-none').addClass('alert-danger').text(xhr.responseJSON?.message || 'Import failed.');
-                }
-            });
-        });
-
-        function appendImportedRow(item) {
-            let options = '<option value="">Select Item</option>';
-            @foreach($items as $itm)
-                let sel{{ $itm->id }} = ({{ $itm->id }} == item.item_id) ? 'selected' : '';
-                options += `<option value="{{ $itm->id }}" ${sel{{ $itm->id }}}>{{ addslashes($itm->name) }}</option>`;
-            @endforeach
-            if (options.indexOf(`value="${item.item_id}"`) === -1) {
-                options += `<option value="${item.item_id}" selected>${item.item_name}</option>`;
-                itemData[item.item_id] = { hsn: item.hsn||'', brand_code: item.brand_code||'', pack_size: 1, sale_price: item.rate||0 };
-            }
-
-            let newRow = $(`<tr>
-                <td class="text-center fw-bold sl-no">${rowIdx+1}</td>
-                <td>
-                    <select name="items[${rowIdx}][item_id]" class="form-select item-select" required>${options}</select>
-                    <input type="hidden" name="items[${rowIdx}][no_of_package]" class="package-input" value="${item.no_of_package||0}">
-                    <input type="hidden" name="items[${rowIdx}][packets]" class="packets-input" value="${item.packets||item.quantity||0}">
-                    <input type="hidden" name="items[${rowIdx}][mrp]" class="mrp-input" value="${item.mrp||item.rate||0}">
-                    <input type="hidden" name="items[${rowIdx}][cgst_rate]" class="cgst-rate-input" value="${item.cgst_rate||20.00}">
-                    <input type="hidden" name="items[${rowIdx}][sgst_rate]" class="sgst-rate-input" value="${item.sgst_rate||20.00}">
-                </td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][quantity]" class="form-control qty-input text-end" value="${item.quantity||0}" required></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][rate]" class="form-control rate-input text-end" value="${item.rate||0}" required></td>
-                <td><input type="text" name="items[${rowIdx}][uom]" class="form-control uom-input text-center" value="${item.uom||'PCS'}"></td>
-                <td><input type="number" step="0.01" name="items[${rowIdx}][discount_amount]" class="form-control discount-input text-end" value="${item.discount_amount||0}"></td>
-                <td><div class="amt-display amount-display">0.00</div></td>
-                <td class="text-center"><button type="button" class="btn btn-sm btn-icon btn-outline-danger remove-row"><i class="bx bx-trash"></i></button></td>
-            </tr>`);
-            $('#itemsTable tbody').append(newRow);
-            rowIdx++;
-            updateSlNumbers();
-        }
     });
 </script>
 @endsection
